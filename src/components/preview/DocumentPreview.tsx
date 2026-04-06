@@ -59,6 +59,11 @@ export function DocumentPreview({ document }: DocumentPreviewProps) {
     // Get display tax rate (show percentage only if all items have same rate)
     const taxRateDisplay = taxRates.size === 1 ? Array.from(taxRates)[0] : null;
 
+    // If custom letterhead is uploaded, use Letterhead template
+    if (document.customTemplate) {
+        return <LetterheadTemplate document={document} color={color} subtotal={subtotal} totalDiscount={totalDiscount} totalTax={totalTax} grandTotal={grandTotal} taxRateDisplay={taxRateDisplay} />;
+    }
+
     // Render based on template
     if (template === "modern") {
         return <ModernTemplate document={document} color={color} subtotal={subtotal} totalDiscount={totalDiscount} totalTax={totalTax} grandTotal={grandTotal} taxRateDisplay={taxRateDisplay} />;
@@ -148,6 +153,116 @@ function lightenColor(hex: string, percent: number): string {
 }
 
 // ============================================================================
+// LETTERHEAD TEMPLATE - Uses uploaded letterhead as background, content only
+// ============================================================================
+function LetterheadTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
+    const { type, client, details, items, customTemplate, business } = document;
+    const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
+
+    return (
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "842px", backgroundColor: colors.white }}>
+            {/* Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0 }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
+
+            {/* Content - positioned below letterhead header */}
+            <div style={{ position: "relative", zIndex: 10, paddingTop: "140px", paddingLeft: "45px", paddingRight: "45px", paddingBottom: "80px" }}>
+                {/* Date and Doc Number */}
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "11px", color: colors.gray700 }}>{formatDate(details.issueDate)}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: colors.gray800 }}>{docLabel} #: {details.documentNumber}</span>
+                </div>
+
+                {/* Client Info */}
+                <div style={{ marginBottom: "24px" }}>
+                    <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{client.name || "Client Name"}</p>
+                    {client.address && <p style={{ margin: "2px 0 0", fontSize: "11px", color: colors.gray600, whiteSpace: "pre-line" }}>{client.address}</p>}
+                    {client.company && <p style={{ margin: "2px 0 0", fontSize: "11px", color: colors.gray600 }}>{client.company}</p>}
+                </div>
+
+                {/* Title */}
+                <div style={{ textAlign: "center", marginBottom: "24px" }}>
+                    <h2 style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: colors.gray800, textDecoration: "underline" }}>
+                        REQUEST FOR {docLabel}
+                    </h2>
+                </div>
+
+                {/* Items Table */}
+                <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "16px" }}>
+                    <thead>
+                        <tr style={{ backgroundColor: colors.gray100 }}>
+                            <th style={{ padding: "10px 8px", fontSize: "10px", fontWeight: 600, color: colors.gray700, textAlign: "left", width: "30px" }}>#</th>
+                            <th style={{ padding: "10px 8px", fontSize: "10px", fontWeight: 600, color: colors.gray700, textAlign: "left" }}>Description</th>
+                            <th style={{ padding: "10px 8px", fontSize: "10px", fontWeight: 600, color: colors.gray700, textAlign: "center", width: "80px" }}>Quantity</th>
+                            <th style={{ padding: "10px 8px", fontSize: "10px", fontWeight: 600, color: colors.gray700, textAlign: "right", width: "100px" }}>Unit Price</th>
+                            <th style={{ padding: "10px 8px", fontSize: "10px", fontWeight: 600, color: colors.gray700, textAlign: "right", width: "100px" }}>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items.map((item, index) => {
+                            const lineTotal = item.quantity * item.unitPrice;
+                            return (
+                                <tr key={index} style={{ borderBottom: `1px solid ${colors.gray200}` }}>
+                                    <td style={{ padding: "10px 8px", fontSize: "11px", color: colors.gray600 }}>{index + 1}</td>
+                                    <td style={{ padding: "10px 8px", fontSize: "11px", color: colors.gray800 }}>{item.description || "Item"}</td>
+                                    <td style={{ padding: "10px 8px", fontSize: "11px", color: colors.gray600, textAlign: "center" }}>{item.quantity}</td>
+                                    <td style={{ padding: "10px 8px", fontSize: "11px", color: colors.gray600, textAlign: "right" }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                    <td style={{ padding: "10px 8px", fontSize: "11px", fontWeight: 600, color: colors.gray800, textAlign: "right" }}>{formatCurrency(lineTotal, details.currency)}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+
+                {/* Totals */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "24px" }}>
+                    <div style={{ width: "200px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: "11px" }}>
+                            <span style={{ color: colors.gray600 }}>Subtotal:</span>
+                            <span style={{ color: colors.gray800 }}>{formatCurrency(subtotal, details.currency)}</span>
+                        </div>
+                        {totalDiscount > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: "11px" }}>
+                                <span style={{ color: colors.gray600 }}>Discount:</span>
+                                <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
+                            </div>
+                        )}
+                        {totalTax > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: "11px" }}>
+                                <span style={{ color: colors.gray600 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%):` : "VAT:"}</span>
+                                <span style={{ color: colors.gray800 }}>{formatCurrency(totalTax, details.currency)}</span>
+                            </div>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: `1px solid ${colors.gray300}`, marginTop: "4px" }}>
+                            <span style={{ fontSize: "12px", fontWeight: 700, color: colors.gray800 }}>Total:</span>
+                            <span style={{ fontSize: "14px", fontWeight: 700, color: colors.gray900 }}>{formatCurrency(grandTotal, details.currency)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Terms */}
+                {details.terms && (
+                    <div style={{ marginBottom: "20px" }}>
+                        <p style={{ margin: "0 0 6px", fontSize: "11px", fontWeight: 600, color: colors.gray700 }}>Terms & Conditions</p>
+                        <p style={{ margin: 0, fontSize: "10px", color: colors.gray500, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>
+                    </div>
+                )}
+
+                {/* Sign-off */}
+                <div style={{ marginTop: "16px" }}>
+                    {details.notes && <p style={{ margin: "0 0 8px", fontSize: "11px", color: colors.gray700 }}>{details.notes}</p>}
+                    <p style={{ margin: 0, fontSize: "11px", color: colors.gray700 }}>Yours faithfully,</p>
+                    <p style={{ margin: "4px 0 0", fontSize: "12px", fontWeight: 600, color: colors.gray800 }}>{business.name || "Your Business"}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ============================================================================
 // CLASSIC TEMPLATE - Clean, timeless professional design
 // ============================================================================
 function ClassicTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
@@ -165,10 +280,10 @@ function ClassicTemplate({ document, color, subtotal, totalDiscount, totalTax, g
                 fontFamily: fontStack,
             }}
         >
-            {/* Watermark */}
+            {/* Custom Letterhead Background */}
             {customTemplate && (
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "55%", maxHeight: "45%", zIndex: 0, pointerEvents: "none" }}>
-                    <img src={customTemplate} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", opacity: 0.05, filter: "grayscale(50%)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
 
@@ -337,10 +452,10 @@ function ModernTemplate({ document, color, subtotal, totalDiscount, totalTax, gr
                 fontFamily: fontStack,
             }}
         >
-            {/* Watermark */}
+            {/* Custom Letterhead Background */}
             {customTemplate && (
-                <div style={{ position: "absolute", top: "55%", left: "50%", transform: "translate(-50%, -50%)", width: "50%", maxHeight: "40%", zIndex: 1, pointerEvents: "none" }}>
-                    <img src={customTemplate} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", opacity: 0.04, filter: "grayscale(50%)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 1, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
 
@@ -488,10 +603,10 @@ function MinimalistTemplate({ document, color, subtotal, totalDiscount, totalTax
                 fontFamily: fontStack,
             }}
         >
-            {/* Watermark */}
+            {/* Custom Letterhead Background */}
             {customTemplate && (
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "45%", maxHeight: "40%", zIndex: 0, pointerEvents: "none" }}>
-                    <img src={customTemplate} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", opacity: 0.04, filter: "grayscale(60%)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
 
@@ -625,10 +740,10 @@ function CorporateTemplate({ document, color, subtotal, totalDiscount, totalTax,
                 fontFamily: fontStack,
             }}
         >
-            {/* Watermark - positioned in content area */}
+            {/* Custom Letterhead Background */}
             {customTemplate && (
-                <div style={{ position: "absolute", top: "50%", left: "62%", transform: "translate(-50%, -50%)", width: "40%", maxHeight: "38%", zIndex: 0, pointerEvents: "none" }}>
-                    <img src={customTemplate} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", opacity: 0.04, filter: "grayscale(50%)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
 
@@ -780,16 +895,10 @@ function CreativeTemplate({ document, color, subtotal, totalDiscount, totalTax, 
                 fontFamily: fontStack,
             }}
         >
-            {/* Large watermark text or custom image */}
-            {customTemplate ? (
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%) rotate(-12deg)", width: "50%", maxHeight: "40%", zIndex: 1, pointerEvents: "none" }}>
-                    <img src={customTemplate} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", opacity: 0.04, filter: "grayscale(30%)" }} />
-                </div>
-            ) : (
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%) rotate(-12deg)", pointerEvents: "none", zIndex: 1 }}>
-                    <span style={{ fontSize: "120px", fontWeight: 900, textTransform: "uppercase", color, opacity: 0.03, letterSpacing: "-0.02em" }}>
-                        {type === "invoice" ? "INVOICE" : "QUOTE"}
-                    </span>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 1, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
 
@@ -927,351 +1036,75 @@ function CreativeTemplate({ document, color, subtotal, totalDiscount, totalTax, 
 
 // ==================== SIMPLE CLEAN TEMPLATE ====================
 function SimpleCleanTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
 
     return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, padding: "40px 48px", boxSizing: "border-box" }}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px" }}>
-                <div>
-                    <h1 style={{ margin: 0, fontSize: "36px", fontWeight: 700, color, letterSpacing: "0.05em" }}>{docLabel}</h1>
-                    <p style={{ margin: "8px 0 0", fontSize: "13px", color: colors.gray500 }}>#{details.documentNumber}</p>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                    {business.name && <p style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: colors.gray800 }}>{business.name}</p>}
-                    {business.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
-                    {business.email && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500 }}>{business.email}</p>}
-                </div>
-            </div>
-
-            {/* Bill To & Dates */}
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "32px", paddingBottom: "24px", borderBottom: `1px solid ${colors.gray200}` }}>
-                <div>
-                    <p style={{ margin: "0 0 8px", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Bill To</p>
-                    {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
-                    {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
-                    {client.email && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500 }}>{client.email}</p>}
-                </div>
-                <div style={{ textAlign: "right" }}>
-                    <div style={{ marginBottom: "12px" }}>
-                        <p style={{ margin: 0, fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Date</p>
-                        <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.issueDate}</p>
-                    </div>
-                    <div>
-                        <p style={{ margin: 0, fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Due Date</p>
-                        <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.dueDate}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Items Table */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "32px" }}>
-                <thead>
-                    <tr>
-                        <th style={{ textAlign: "left", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", borderBottom: `2px solid ${color}` }}>Description</th>
-                        <th style={{ textAlign: "center", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", borderBottom: `2px solid ${color}` }}>Qty</th>
-                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", borderBottom: `2px solid ${color}` }}>Rate</th>
-                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", borderBottom: `2px solid ${color}` }}>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map((item, i) => (
-                        <tr key={item.id}>
-                            <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700, borderBottom: `1px solid ${colors.gray100}` }}>{item.description || "Item"}</td>
-                            <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500, borderBottom: `1px solid ${colors.gray100}` }}>{item.quantity}</td>
-                            <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500, borderBottom: `1px solid ${colors.gray100}` }}>{formatCurrency(item.unitPrice, details.currency)}</td>
-                            <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800, borderBottom: `1px solid ${colors.gray100}` }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            {/* Totals */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "40px" }}>
-                <div style={{ width: "240px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
-                        <span style={{ color: colors.gray500 }}>Subtotal</span>
-                        <span style={{ color: colors.gray700 }}>{formatCurrency(subtotal, details.currency)}</span>
-                    </div>
-                    {totalDiscount > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
-                            <span style={{ color: colors.gray500 }}>Discount</span>
-                            <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
-                        </div>
-                    )}
-                    {totalTax > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
-                            <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
-                            <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
-                        </div>
-                    )}
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "16px 0", marginTop: "8px", borderTop: `2px solid ${color}` }}>
-                        <span style={{ fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>Total</span>
-                        <span style={{ fontSize: "18px", fontWeight: 700, color }}>{formatCurrency(grandTotal, details.currency)}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Notes & Terms */}
-            {(details.notes || details.terms) && (
-                <div style={{ paddingTop: "24px", borderTop: `1px solid ${colors.gray200}` }}>
-                    {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
-                    {details.terms && <p style={{ margin: 0, fontSize: "11px", color: colors.gray400, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.terms}</p>}
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
-        </div>
-    );
-}
-
-// ==================== SIGNATURE TEMPLATE ====================
-function SignatureTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
-    const docLabel = type === "invoice" ? "Invoice" : "Quotation";
-
-    return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, padding: "48px", boxSizing: "border-box" }}>
-            {/* Header with elegant styling */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "48px" }}>
-                <div>
-                    {business.name && <p style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 600, color: colors.gray800 }}>{business.name}</p>}
-                    {business.address && <p style={{ margin: 0, fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
-                </div>
-                <div style={{ textAlign: "right" }}>
-                    <h1 style={{ margin: 0, fontSize: "28px", fontWeight: 300, color: colors.gray800, letterSpacing: "0.15em", textTransform: "uppercase" }}>{docLabel}</h1>
-                    <p style={{ margin: "8px 0 0", fontSize: "12px", color: colors.gray500 }}>#{details.documentNumber}</p>
-                </div>
-            </div>
-
-            {/* Client & Dates */}
-            <div style={{ display: "flex", gap: "48px", marginBottom: "36px" }}>
-                <div style={{ flex: 1 }}>
-                    <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.15em" }}>Billed To</p>
-                    {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 500, color: colors.gray800 }}>{client.name}</p>}
-                    {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
-                </div>
-                <div>
-                    <p style={{ margin: "0 0 4px", fontSize: "11px", color: colors.gray400 }}>Date: <span style={{ color: colors.gray700 }}>{details.issueDate}</span></p>
-                    <p style={{ margin: 0, fontSize: "11px", color: colors.gray400 }}>Due: <span style={{ color: colors.gray700 }}>{details.dueDate}</span></p>
-                </div>
-            </div>
-
-            {/* Items */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "32px" }}>
-                <thead>
-                    <tr style={{ borderBottom: `1px solid ${colors.gray200}` }}>
-                        <th style={{ textAlign: "left", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Item</th>
-                        <th style={{ textAlign: "center", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Qty</th>
-                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Price</th>
-                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map((item) => (
-                        <tr key={item.id} style={{ borderBottom: `1px solid ${colors.gray100}` }}>
-                            <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
-                            <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
-                            <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
-                            <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", fontWeight: 500, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            {/* Totals */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "48px" }}>
-                <div style={{ width: "220px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px", color: colors.gray500 }}>
-                        <span>Subtotal</span>
-                        <span>{formatCurrency(subtotal, details.currency)}</span>
-                    </div>
-                    {totalDiscount > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
-                            <span style={{ color: colors.gray500 }}>Discount</span>
-                            <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
-                        </div>
-                    )}
-                    {totalTax > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
-                            <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
-                            <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
-                        </div>
-                    )}
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", marginTop: "8px", borderTop: `1px solid ${colors.gray300}` }}>
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: colors.gray700 }}>Total Due</span>
-                        <span style={{ fontSize: "16px", fontWeight: 600, color: colors.gray900 }}>{formatCurrency(grandTotal, details.currency)}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Signature area */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "auto", paddingTop: "32px" }}>
-                <div>
-                    {details.notes && <p style={{ margin: "0 0 16px", fontSize: "12px", color: colors.gray500, lineHeight: 1.7, maxWidth: "280px", whiteSpace: "pre-line" }}>{details.notes}</p>}
-                    {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, maxWidth: "280px", whiteSpace: "pre-line" }}>{details.terms}</p>}
-                </div>
-                <div style={{ textAlign: "center" }}>
-                    <div style={{ width: "180px", borderBottom: `1px solid ${colors.gray300}`, marginBottom: "8px", paddingBottom: "40px" }}></div>
-                    <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Authorized Signature</p>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ==================== TOTAL HIGHLIGHT TEMPLATE ====================
-function TotalHighlightTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
-    const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
-
-    return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, padding: "40px", boxSizing: "border-box" }}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
-                <div>
-                    {business.name && <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: colors.gray800 }}>{business.name}</h2>}
-                    {business.address && <p style={{ margin: "8px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
-                </div>
-                {/* Total highlight box */}
-                <div style={{ backgroundColor: color, padding: "20px 28px", borderRadius: "8px", textAlign: "center" }}>
-                    <p style={{ margin: 0, fontSize: "10px", color: colors.white, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.9 }}>{docLabel} Total</p>
-                    <p style={{ margin: "8px 0 0", fontSize: "26px", fontWeight: 700, color: colors.white }}>{formatCurrency(grandTotal, details.currency)}</p>
-                </div>
-            </div>
-
-            {/* Doc info line */}
-            <div style={{ display: "flex", gap: "32px", marginBottom: "28px", paddingBottom: "20px", borderBottom: `1px solid ${colors.gray200}` }}>
-                <div>
-                    <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, textTransform: "uppercase" }}>{docLabel} #</p>
-                    <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: 600, color: colors.gray700 }}>{details.documentNumber}</p>
-                </div>
-                <div>
-                    <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, textTransform: "uppercase" }}>Issue Date</p>
-                    <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.issueDate}</p>
-                </div>
-                <div>
-                    <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, textTransform: "uppercase" }}>Due Date</p>
-                    <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.dueDate}</p>
-                </div>
-            </div>
-
-            {/* Bill To */}
-            <div style={{ marginBottom: "28px" }}>
-                <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.1em" }}>Bill To</p>
-                {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
-                {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
-                {client.email && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500 }}>{client.email}</p>}
-            </div>
-
-            {/* Items */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
-                <thead>
-                    <tr style={{ backgroundColor: colors.gray50 }}>
-                        <th style={{ textAlign: "left", padding: "12px 16px", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Description</th>
-                        <th style={{ textAlign: "center", padding: "12px 16px", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Qty</th>
-                        <th style={{ textAlign: "right", padding: "12px 16px", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Rate</th>
-                        <th style={{ textAlign: "right", padding: "12px 16px", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map((item) => (
-                        <tr key={item.id} style={{ borderBottom: `1px solid ${colors.gray100}` }}>
-                            <td style={{ padding: "14px 16px", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
-                            <td style={{ padding: "14px 16px", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
-                            <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
-                            <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            {/* Totals */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
-                <div style={{ width: "220px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
-                        <span style={{ color: colors.gray500 }}>Subtotal</span>
-                        <span style={{ color: colors.gray700 }}>{formatCurrency(subtotal, details.currency)}</span>
-                    </div>
-                    {totalDiscount > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
-                            <span style={{ color: colors.gray500 }}>Discount</span>
-                            <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
-                        </div>
-                    )}
-                    {totalTax > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
-                            <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
-                            <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Notes & Terms */}
-            {(details.notes || details.terms) && (
-                <div style={{ paddingTop: "20px", borderTop: `1px solid ${colors.gray200}` }}>
-                    {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
-                    {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ==================== BLUE BANNER TEMPLATE ====================
-function BlueBannerTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
-    const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
-
-    return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
-            {/* Top banner */}
-            <div style={{ backgroundColor: color, padding: "28px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                    {business.name && <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 600, color: colors.white }}>{business.name}</h2>}
-                </div>
-                <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: colors.white, letterSpacing: "0.1em" }}>{docLabel}</h1>
-            </div>
-
-            <div style={{ padding: "32px 40px" }}>
-                {/* Info row */}
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "32px" }}>
+            <div style={{ position: "relative", zIndex: 10, padding: "40px 48px" }}>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px" }}>
                     <div>
-                        <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Bill To</p>
-                        {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
-                        {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                        <h1 style={{ margin: 0, fontSize: "36px", fontWeight: 700, color, letterSpacing: "0.05em" }}>{docLabel}</h1>
+                        <p style={{ margin: "8px 0 0", fontSize: "13px", color: colors.gray500 }}>#{details.documentNumber}</p>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                        <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.gray500 }}>{docLabel} #: <span style={{ fontWeight: 600, color: colors.gray700 }}>{details.documentNumber}</span></p>
-                        <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.gray500 }}>Date: <span style={{ color: colors.gray700 }}>{details.issueDate}</span></p>
-                        <p style={{ margin: 0, fontSize: "12px", color: colors.gray500 }}>Due: <span style={{ color: colors.gray700 }}>{details.dueDate}</span></p>
+                        {business.name && <p style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: colors.gray800 }}>{business.name}</p>}
+                        {business.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
+                        {business.email && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500 }}>{business.email}</p>}
                     </div>
                 </div>
 
-                {/* Items */}
-                <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
+                {/* Bill To & Dates */}
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "32px", paddingBottom: "24px", borderBottom: `1px solid ${colors.gray200}` }}>
+                    <div>
+                        <p style={{ margin: "0 0 8px", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Bill To</p>
+                        {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
+                        {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                        {client.email && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500 }}>{client.email}</p>}
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                        <div style={{ marginBottom: "12px" }}>
+                            <p style={{ margin: 0, fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Date</p>
+                            <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.issueDate}</p>
+                        </div>
+                        <div>
+                            <p style={{ margin: 0, fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Due Date</p>
+                            <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.dueDate}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Items Table */}
+                <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "32px" }}>
                     <thead>
-                        <tr style={{ borderBottom: `2px solid ${color}` }}>
-                            <th style={{ textAlign: "left", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Item</th>
-                            <th style={{ textAlign: "center", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Qty</th>
-                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Rate</th>
-                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Amount</th>
+                        <tr>
+                            <th style={{ textAlign: "left", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", borderBottom: `2px solid ${color}` }}>Description</th>
+                            <th style={{ textAlign: "center", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", borderBottom: `2px solid ${color}` }}>Qty</th>
+                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", borderBottom: `2px solid ${color}` }}>Rate</th>
+                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", borderBottom: `2px solid ${color}` }}>Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         {items.map((item, i) => (
-                            <tr key={item.id} style={{ backgroundColor: i % 2 === 1 ? colors.gray50 : "transparent" }}>
-                                <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
-                                <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
-                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
-                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                            <tr key={item.id}>
+                                <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700, borderBottom: `1px solid ${colors.gray100}` }}>{item.description || "Item"}</td>
+                                <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500, borderBottom: `1px solid ${colors.gray100}` }}>{item.quantity}</td>
+                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500, borderBottom: `1px solid ${colors.gray100}` }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800, borderBottom: `1px solid ${colors.gray100}` }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
 
                 {/* Totals */}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "40px" }}>
                     <div style={{ width: "240px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
                             <span style={{ color: colors.gray500 }}>Subtotal</span>
@@ -1289,21 +1122,226 @@ function BlueBannerTemplate({ document, color, subtotal, totalDiscount, totalTax
                                 <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
                             </div>
                         )}
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 16px", marginTop: "8px", backgroundColor: color, borderRadius: "6px" }}>
-                            <span style={{ fontSize: "13px", fontWeight: 600, color: colors.white }}>Total Due</span>
-                            <span style={{ fontSize: "18px", fontWeight: 700, color: colors.white }}>{formatCurrency(grandTotal, details.currency)}</span>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "16px 0", marginTop: "8px", borderTop: `2px solid ${color}` }}>
+                            <span style={{ fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>Total</span>
+                            <span style={{ fontSize: "18px", fontWeight: 700, color }}>{formatCurrency(grandTotal, details.currency)}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Thank you message */}
-                <div style={{ textAlign: "center", padding: "24px 0", borderTop: `1px solid ${colors.gray200}` }}>
-                    <p style={{ margin: 0, fontSize: "16px", fontWeight: 500, color }}>Thank you for your business!</p>
+                {/* Notes & Terms */}
+                {(details.notes || details.terms) && (
+                    <div style={{ paddingTop: "24px", borderTop: `1px solid ${colors.gray200}` }}>
+                        {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
+                        {details.terms && <p style={{ margin: 0, fontSize: "11px", color: colors.gray400, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.terms}</p>}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ==================== SIGNATURE TEMPLATE ====================
+function SignatureTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
+    const { type, business, client, details, items, customTemplate } = document;
+    const docLabel = type === "invoice" ? "Invoice" : "Quotation";
+
+    return (
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
+            <div style={{ position: "relative", zIndex: 10, padding: "48px" }}>
+                {/* Header with elegant styling */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "48px" }}>
+                    <div>
+                        {business.name && <p style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 600, color: colors.gray800 }}>{business.name}</p>}
+                        {business.address && <p style={{ margin: 0, fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                        <h1 style={{ margin: 0, fontSize: "28px", fontWeight: 300, color: colors.gray800, letterSpacing: "0.15em", textTransform: "uppercase" }}>{docLabel}</h1>
+                        <p style={{ margin: "8px 0 0", fontSize: "12px", color: colors.gray500 }}>#{details.documentNumber}</p>
+                    </div>
+                </div>
+
+                {/* Client & Dates */}
+                <div style={{ display: "flex", gap: "48px", marginBottom: "36px" }}>
+                    <div style={{ flex: 1 }}>
+                        <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.15em" }}>Billed To</p>
+                        {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 500, color: colors.gray800 }}>{client.name}</p>}
+                        {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                    </div>
+                    <div>
+                        <p style={{ margin: "0 0 4px", fontSize: "11px", color: colors.gray400 }}>Date: <span style={{ color: colors.gray700 }}>{details.issueDate}</span></p>
+                        <p style={{ margin: 0, fontSize: "11px", color: colors.gray400 }}>Due: <span style={{ color: colors.gray700 }}>{details.dueDate}</span></p>
+                    </div>
+                </div>
+
+                {/* Items */}
+                <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "32px" }}>
+                    <thead>
+                        <tr style={{ borderBottom: `1px solid ${colors.gray200}` }}>
+                            <th style={{ textAlign: "left", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Item</th>
+                            <th style={{ textAlign: "center", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Qty</th>
+                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Price</th>
+                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items.map((item) => (
+                            <tr key={item.id} style={{ borderBottom: `1px solid ${colors.gray100}` }}>
+                                <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
+                                <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
+                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", fontWeight: 500, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                {/* Totals */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "48px" }}>
+                    <div style={{ width: "220px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px", color: colors.gray500 }}>
+                            <span>Subtotal</span>
+                            <span>{formatCurrency(subtotal, details.currency)}</span>
+                        </div>
+                        {totalDiscount > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
+                                <span style={{ color: colors.gray500 }}>Discount</span>
+                                <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
+                            </div>
+                        )}
+                        {totalTax > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
+                                <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
+                                <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
+                            </div>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", marginTop: "8px", borderTop: `1px solid ${colors.gray300}` }}>
+                            <span style={{ fontSize: "13px", fontWeight: 600, color: colors.gray700 }}>Total Due</span>
+                            <span style={{ fontSize: "16px", fontWeight: 600, color: colors.gray900 }}>{formatCurrency(grandTotal, details.currency)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Signature area */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "auto", paddingTop: "32px" }}>
+                    <div>
+                        {details.notes && <p style={{ margin: "0 0 16px", fontSize: "12px", color: colors.gray500, lineHeight: 1.7, maxWidth: "280px", whiteSpace: "pre-line" }}>{details.notes}</p>}
+                        {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, maxWidth: "280px", whiteSpace: "pre-line" }}>{details.terms}</p>}
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                        <div style={{ width: "180px", borderBottom: `1px solid ${colors.gray300}`, marginBottom: "8px", paddingBottom: "40px" }}></div>
+                        <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, textTransform: "uppercase", letterSpacing: "0.1em" }}>Authorized Signature</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ==================== TOTAL HIGHLIGHT TEMPLATE ====================
+function TotalHighlightTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
+    const { type, business, client, details, items, customTemplate } = document;
+    const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
+
+    return (
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
+            <div style={{ position: "relative", zIndex: 10, padding: "40px" }}>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
+                    <div>
+                        {business.name && <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: colors.gray800 }}>{business.name}</h2>}
+                        {business.address && <p style={{ margin: "8px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
+                    </div>
+                    {/* Total highlight box */}
+                    <div style={{ backgroundColor: color, padding: "20px 28px", borderRadius: "8px", textAlign: "center" }}>
+                        <p style={{ margin: 0, fontSize: "10px", color: colors.white, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.9 }}>{docLabel} Total</p>
+                        <p style={{ margin: "8px 0 0", fontSize: "26px", fontWeight: 700, color: colors.white }}>{formatCurrency(grandTotal, details.currency)}</p>
+                    </div>
+                </div>
+
+                {/* Doc info line */}
+                <div style={{ display: "flex", gap: "32px", marginBottom: "28px", paddingBottom: "20px", borderBottom: `1px solid ${colors.gray200}` }}>
+                    <div>
+                        <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, textTransform: "uppercase" }}>{docLabel} #</p>
+                        <p style={{ margin: "4px 0 0", fontSize: "13px", fontWeight: 600, color: colors.gray700 }}>{details.documentNumber}</p>
+                    </div>
+                    <div>
+                        <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, textTransform: "uppercase" }}>Issue Date</p>
+                        <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.issueDate}</p>
+                    </div>
+                    <div>
+                        <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, textTransform: "uppercase" }}>Due Date</p>
+                        <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.dueDate}</p>
+                    </div>
+                </div>
+
+                {/* Bill To */}
+                <div style={{ marginBottom: "28px" }}>
+                    <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.1em" }}>Bill To</p>
+                    {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
+                    {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                    {client.email && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500 }}>{client.email}</p>}
+                </div>
+
+                {/* Items */}
+                <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
+                    <thead>
+                        <tr style={{ backgroundColor: colors.gray50 }}>
+                            <th style={{ textAlign: "left", padding: "12px 16px", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Description</th>
+                            <th style={{ textAlign: "center", padding: "12px 16px", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Qty</th>
+                            <th style={{ textAlign: "right", padding: "12px 16px", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Rate</th>
+                            <th style={{ textAlign: "right", padding: "12px 16px", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items.map((item) => (
+                            <tr key={item.id} style={{ borderBottom: `1px solid ${colors.gray100}` }}>
+                                <td style={{ padding: "14px 16px", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
+                                <td style={{ padding: "14px 16px", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
+                                <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                {/* Totals */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
+                    <div style={{ width: "220px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
+                            <span style={{ color: colors.gray500 }}>Subtotal</span>
+                            <span style={{ color: colors.gray700 }}>{formatCurrency(subtotal, details.currency)}</span>
+                        </div>
+                        {totalDiscount > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
+                                <span style={{ color: colors.gray500 }}>Discount</span>
+                                <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
+                            </div>
+                        )}
+                        {totalTax > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "12px" }}>
+                                <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
+                                <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Notes & Terms */}
                 {(details.notes || details.terms) && (
-                    <div style={{ paddingTop: "16px" }}>
+                    <div style={{ paddingTop: "20px", borderTop: `1px solid ${colors.gray200}` }}>
                         {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
                         {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
                     </div>
@@ -1313,16 +1351,125 @@ function BlueBannerTemplate({ document, color, subtotal, totalDiscount, totalTax
     );
 }
 
+// ==================== BLUE BANNER TEMPLATE ====================
+function BlueBannerTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
+    const { type, business, client, details, items, customTemplate } = document;
+    const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
+
+    return (
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
+            <div style={{ position: "relative", zIndex: 10 }}>
+                {/* Top banner */}
+                <div style={{ backgroundColor: color, padding: "28px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                        {business.name && <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 600, color: colors.white }}>{business.name}</h2>}
+                    </div>
+                    <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: colors.white, letterSpacing: "0.1em" }}>{docLabel}</h1>
+                </div>
+
+                <div style={{ padding: "32px 40px" }}>
+                    {/* Info row */}
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "32px" }}>
+                        <div>
+                            <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Bill To</p>
+                            {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
+                            {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                            <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.gray500 }}>{docLabel} #: <span style={{ fontWeight: 600, color: colors.gray700 }}>{details.documentNumber}</span></p>
+                            <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.gray500 }}>Date: <span style={{ color: colors.gray700 }}>{details.issueDate}</span></p>
+                            <p style={{ margin: 0, fontSize: "12px", color: colors.gray500 }}>Due: <span style={{ color: colors.gray700 }}>{details.dueDate}</span></p>
+                        </div>
+                    </div>
+
+                    {/* Items */}
+                    <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
+                        <thead>
+                            <tr style={{ borderBottom: `2px solid ${color}` }}>
+                                <th style={{ textAlign: "left", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Item</th>
+                                <th style={{ textAlign: "center", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Qty</th>
+                                <th style={{ textAlign: "right", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Rate</th>
+                                <th style={{ textAlign: "right", padding: "12px 0", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map((item, i) => (
+                                <tr key={item.id} style={{ backgroundColor: i % 2 === 1 ? colors.gray50 : "transparent" }}>
+                                    <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
+                                    <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
+                                    <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                    <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    {/* Totals */}
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
+                        <div style={{ width: "240px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
+                                <span style={{ color: colors.gray500 }}>Subtotal</span>
+                                <span style={{ color: colors.gray700 }}>{formatCurrency(subtotal, details.currency)}</span>
+                            </div>
+                            {totalDiscount > 0 && (
+                                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
+                                    <span style={{ color: colors.gray500 }}>Discount</span>
+                                    <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
+                                </div>
+                            )}
+                            {totalTax > 0 && (
+                                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
+                                    <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
+                                    <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
+                                </div>
+                            )}
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 16px", marginTop: "8px", backgroundColor: color, borderRadius: "6px" }}>
+                                <span style={{ fontSize: "13px", fontWeight: 600, color: colors.white }}>Total Due</span>
+                                <span style={{ fontSize: "18px", fontWeight: 700, color: colors.white }}>{formatCurrency(grandTotal, details.currency)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Thank you message */}
+                    <div style={{ textAlign: "center", padding: "24px 0", borderTop: `1px solid ${colors.gray200}` }}>
+                        <p style={{ margin: 0, fontSize: "16px", fontWeight: 500, color }}>Thank you for your business!</p>
+                    </div>
+
+                    {/* Notes & Terms */}
+                    {(details.notes || details.terms) && (
+                        <div style={{ paddingTop: "16px" }}>
+                            {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
+                            {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ==================== WATERCOLOR TEMPLATE ====================
 function WatercolorTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const docLabel = type === "invoice" ? "Invoice" : "Quotation";
     const lightColor = lightenColor(color, 0.85);
 
     return (
         <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, padding: "40px", boxSizing: "border-box", position: "relative" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
             {/* Watercolor effect header */}
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "120px", background: `linear-gradient(180deg, ${lightColor} 0%, transparent 100%)`, opacity: 0.7 }}></div>
+            {!customTemplate && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "120px", background: `linear-gradient(180deg, ${lightColor} 0%, transparent 100%)`, opacity: 0.7 }}></div>}
 
             <div style={{ position: "relative", zIndex: 1 }}>
                 {/* Header */}
@@ -1412,13 +1559,19 @@ function WatercolorTemplate({ document, color, subtotal, totalDiscount, totalTax
 
 // ==================== SIDEBAR TEMPLATE ====================
 function SidebarTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
 
     return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, display: "flex", boxSizing: "border-box" }}>
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, display: "flex", boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
             {/* Left sidebar */}
-            <div style={{ width: "50px", backgroundColor: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ position: "relative", zIndex: 10, width: "50px", backgroundColor: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: colors.white, letterSpacing: "0.2em", writingMode: "vertical-rl", textOrientation: "mixed", transform: "rotate(180deg)" }}>
                     {docLabel} #{details.documentNumber}
                 </p>
@@ -1508,156 +1661,73 @@ function SidebarTemplate({ document, color, subtotal, totalDiscount, totalTax, g
 
 // ==================== BLUE ACCENT TEMPLATE ====================
 function BlueAccentTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const docLabel = type === "invoice" ? "Invoice" : "Quotation";
 
     return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, padding: "40px 48px", boxSizing: "border-box" }}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px", paddingBottom: "20px", borderBottom: `3px solid ${color}` }}>
-                <div>
-                    {business.name && <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: colors.gray800 }}>{business.name}</h2>}
-                    {business.address && <p style={{ margin: "8px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
-                </div>
-                <div style={{ textAlign: "right" }}>
-                    <h1 style={{ margin: 0, fontSize: "28px", fontWeight: 700, color }}>{docLabel}</h1>
-                    <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray500 }}>#{details.documentNumber}</p>
-                </div>
-            </div>
-
-            {/* Info boxes */}
-            <div style={{ display: "flex", gap: "24px", marginBottom: "32px" }}>
-                <div style={{ flex: 1, padding: "16px", backgroundColor: colors.gray50, borderRadius: "8px", borderLeft: `4px solid ${color}` }}>
-                    <p style={{ margin: "0 0 6px", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Bill To</p>
-                    {client.name && <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
-                    {client.address && <p style={{ margin: "4px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
-                </div>
-                <div style={{ padding: "16px", backgroundColor: colors.gray50, borderRadius: "8px" }}>
-                    <div style={{ marginBottom: "10px" }}>
-                        <p style={{ margin: 0, fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Date</p>
-                        <p style={{ margin: "2px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.issueDate}</p>
-                    </div>
-                    <div>
-                        <p style={{ margin: 0, fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Due Date</p>
-                        <p style={{ margin: "2px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.dueDate}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Items */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
-                <thead>
-                    <tr style={{ backgroundColor: color }}>
-                        <th style={{ textAlign: "left", padding: "12px 16px", fontSize: "11px", fontWeight: 600, color: colors.white, textTransform: "uppercase" }}>Description</th>
-                        <th style={{ textAlign: "center", padding: "12px 16px", fontSize: "11px", fontWeight: 600, color: colors.white, textTransform: "uppercase" }}>Qty</th>
-                        <th style={{ textAlign: "right", padding: "12px 16px", fontSize: "11px", fontWeight: 600, color: colors.white, textTransform: "uppercase" }}>Rate</th>
-                        <th style={{ textAlign: "right", padding: "12px 16px", fontSize: "11px", fontWeight: 600, color: colors.white, textTransform: "uppercase" }}>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map((item, i) => (
-                        <tr key={item.id} style={{ backgroundColor: i % 2 === 0 ? colors.white : colors.gray50 }}>
-                            <td style={{ padding: "14px 16px", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
-                            <td style={{ padding: "14px 16px", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
-                            <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
-                            <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            {/* Totals */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "36px" }}>
-                <div style={{ width: "240px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
-                        <span style={{ color: colors.gray500 }}>Subtotal</span>
-                        <span style={{ color: colors.gray700 }}>{formatCurrency(subtotal, details.currency)}</span>
-                    </div>
-                    {totalDiscount > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
-                            <span style={{ color: colors.gray500 }}>Discount</span>
-                            <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
-                        </div>
-                    )}
-                    {totalTax > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
-                            <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
-                            <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
-                        </div>
-                    )}
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "14px", marginTop: "8px", backgroundColor: color, borderRadius: "6px" }}>
-                        <span style={{ fontSize: "14px", fontWeight: 600, color: colors.white }}>Total</span>
-                        <span style={{ fontSize: "18px", fontWeight: 700, color: colors.white }}>{formatCurrency(grandTotal, details.currency)}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Notes & Terms */}
-            {(details.notes || details.terms) && (
-                <div style={{ paddingTop: "20px", borderTop: `1px solid ${colors.gray200}` }}>
-                    {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
-                    {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
-        </div>
-    );
-}
-
-// ==================== TWO COLUMN TEMPLATE ====================
-function TwoColumnTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
-    const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
-
-    return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
-            {/* Split header */}
-            <div style={{ display: "flex" }}>
-                <div style={{ flex: 1, padding: "32px", backgroundColor: colors.gray50 }}>
-                    {business.name && <h2 style={{ margin: "0 0 12px", fontSize: "18px", fontWeight: 700, color: colors.gray800 }}>{business.name}</h2>}
-                    {business.address && <p style={{ margin: "0 0 4px", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
-                    {business.email && <p style={{ margin: 0, fontSize: "11px", color: colors.gray500 }}>{business.email}</p>}
+            <div style={{ position: "relative", zIndex: 10, padding: "40px 48px" }}>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px", paddingBottom: "20px", borderBottom: `3px solid ${color}` }}>
+                    <div>
+                        {business.name && <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: colors.gray800 }}>{business.name}</h2>}
+                        {business.address && <p style={{ margin: "8px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                        <h1 style={{ margin: 0, fontSize: "28px", fontWeight: 700, color }}>{docLabel}</h1>
+                        <p style={{ margin: "4px 0 0", fontSize: "13px", color: colors.gray500 }}>#{details.documentNumber}</p>
+                    </div>
                 </div>
-                <div style={{ flex: 1, padding: "32px", backgroundColor: color }}>
-                    <h1 style={{ margin: "0 0 12px", fontSize: "24px", fontWeight: 700, color: colors.white, letterSpacing: "0.1em" }}>{docLabel}</h1>
-                    <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.white, opacity: 0.9 }}>#{details.documentNumber}</p>
-                    <p style={{ margin: "0 0 2px", fontSize: "11px", color: colors.white, opacity: 0.8 }}>Date: {details.issueDate}</p>
-                    <p style={{ margin: 0, fontSize: "11px", color: colors.white, opacity: 0.8 }}>Due: {details.dueDate}</p>
-                </div>
-            </div>
 
-            <div style={{ padding: "32px" }}>
-                {/* Bill To */}
-                <div style={{ marginBottom: "28px" }}>
-                    <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.1em" }}>Bill To</p>
-                    {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
-                    {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
-                    {client.email && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500 }}>{client.email}</p>}
+                {/* Info boxes */}
+                <div style={{ display: "flex", gap: "24px", marginBottom: "32px" }}>
+                    <div style={{ flex: 1, padding: "16px", backgroundColor: colors.gray50, borderRadius: "8px", borderLeft: `4px solid ${color}` }}>
+                        <p style={{ margin: "0 0 6px", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Bill To</p>
+                        {client.name && <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
+                        {client.address && <p style={{ margin: "4px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                    </div>
+                    <div style={{ padding: "16px", backgroundColor: colors.gray50, borderRadius: "8px" }}>
+                        <div style={{ marginBottom: "10px" }}>
+                            <p style={{ margin: 0, fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Date</p>
+                            <p style={{ margin: "2px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.issueDate}</p>
+                        </div>
+                        <div>
+                            <p style={{ margin: 0, fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Due Date</p>
+                            <p style={{ margin: "2px 0 0", fontSize: "13px", color: colors.gray700 }}>{details.dueDate}</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Items */}
                 <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
                     <thead>
-                        <tr style={{ borderBottom: `2px solid ${colors.gray200}` }}>
-                            <th style={{ textAlign: "left", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Description</th>
-                            <th style={{ textAlign: "center", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Qty</th>
-                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Rate</th>
-                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Amount</th>
+                        <tr style={{ backgroundColor: color }}>
+                            <th style={{ textAlign: "left", padding: "12px 16px", fontSize: "11px", fontWeight: 600, color: colors.white, textTransform: "uppercase" }}>Description</th>
+                            <th style={{ textAlign: "center", padding: "12px 16px", fontSize: "11px", fontWeight: 600, color: colors.white, textTransform: "uppercase" }}>Qty</th>
+                            <th style={{ textAlign: "right", padding: "12px 16px", fontSize: "11px", fontWeight: 600, color: colors.white, textTransform: "uppercase" }}>Rate</th>
+                            <th style={{ textAlign: "right", padding: "12px 16px", fontSize: "11px", fontWeight: 600, color: colors.white, textTransform: "uppercase" }}>Amount</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {items.map((item) => (
-                            <tr key={item.id} style={{ borderBottom: `1px solid ${colors.gray100}` }}>
-                                <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
-                                <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
-                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
-                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                        {items.map((item, i) => (
+                            <tr key={item.id} style={{ backgroundColor: i % 2 === 0 ? colors.white : colors.gray50 }}>
+                                <td style={{ padding: "14px 16px", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
+                                <td style={{ padding: "14px 16px", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
+                                <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
 
                 {/* Totals */}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "36px" }}>
                     <div style={{ width: "240px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
                             <span style={{ color: colors.gray500 }}>Subtotal</span>
@@ -1675,9 +1745,9 @@ function TwoColumnTemplate({ document, color, subtotal, totalDiscount, totalTax,
                                 <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
                             </div>
                         )}
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", marginTop: "8px", borderTop: `2px solid ${color}` }}>
-                            <span style={{ fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>Total</span>
-                            <span style={{ fontSize: "20px", fontWeight: 700, color }}>{formatCurrency(grandTotal, details.currency)}</span>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "14px", marginTop: "8px", backgroundColor: color, borderRadius: "6px" }}>
+                            <span style={{ fontSize: "14px", fontWeight: 600, color: colors.white }}>Total</span>
+                            <span style={{ fontSize: "18px", fontWeight: 700, color: colors.white }}>{formatCurrency(grandTotal, details.currency)}</span>
                         </div>
                     </div>
                 </div>
@@ -1694,105 +1764,218 @@ function TwoColumnTemplate({ document, color, subtotal, totalDiscount, totalTax,
     );
 }
 
+// ==================== TWO COLUMN TEMPLATE ====================
+function TwoColumnTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
+    const { type, business, client, details, items, customTemplate } = document;
+    const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
+
+    return (
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
+            <div style={{ position: "relative", zIndex: 10 }}>
+                {/* Split header */}
+                <div style={{ display: "flex" }}>
+                    <div style={{ flex: 1, padding: "32px", backgroundColor: colors.gray50 }}>
+                        {business.name && <h2 style={{ margin: "0 0 12px", fontSize: "18px", fontWeight: 700, color: colors.gray800 }}>{business.name}</h2>}
+                        {business.address && <p style={{ margin: "0 0 4px", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
+                        {business.email && <p style={{ margin: 0, fontSize: "11px", color: colors.gray500 }}>{business.email}</p>}
+                    </div>
+                    <div style={{ flex: 1, padding: "32px", backgroundColor: color }}>
+                        <h1 style={{ margin: "0 0 12px", fontSize: "24px", fontWeight: 700, color: colors.white, letterSpacing: "0.1em" }}>{docLabel}</h1>
+                        <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.white, opacity: 0.9 }}>#{details.documentNumber}</p>
+                        <p style={{ margin: "0 0 2px", fontSize: "11px", color: colors.white, opacity: 0.8 }}>Date: {details.issueDate}</p>
+                        <p style={{ margin: 0, fontSize: "11px", color: colors.white, opacity: 0.8 }}>Due: {details.dueDate}</p>
+                    </div>
+                </div>
+
+                <div style={{ padding: "32px" }}>
+                    {/* Bill To */}
+                    <div style={{ marginBottom: "28px" }}>
+                        <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.1em" }}>Bill To</p>
+                        {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
+                        {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                        {client.email && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500 }}>{client.email}</p>}
+                    </div>
+
+                    {/* Items */}
+                    <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
+                        <thead>
+                            <tr style={{ borderBottom: `2px solid ${colors.gray200}` }}>
+                                <th style={{ textAlign: "left", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Description</th>
+                                <th style={{ textAlign: "center", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Qty</th>
+                                <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Rate</th>
+                                <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", fontWeight: 600, color: colors.gray500, textTransform: "uppercase" }}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map((item) => (
+                                <tr key={item.id} style={{ borderBottom: `1px solid ${colors.gray100}` }}>
+                                    <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
+                                    <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
+                                    <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                    <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    {/* Totals */}
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
+                        <div style={{ width: "240px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
+                                <span style={{ color: colors.gray500 }}>Subtotal</span>
+                                <span style={{ color: colors.gray700 }}>{formatCurrency(subtotal, details.currency)}</span>
+                            </div>
+                            {totalDiscount > 0 && (
+                                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
+                                    <span style={{ color: colors.gray500 }}>Discount</span>
+                                    <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
+                                </div>
+                            )}
+                            {totalTax > 0 && (
+                                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px" }}>
+                                    <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
+                                    <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
+                                </div>
+                            )}
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", marginTop: "8px", borderTop: `2px solid ${color}` }}>
+                                <span style={{ fontSize: "14px", fontWeight: 600, color: colors.gray800 }}>Total</span>
+                                <span style={{ fontSize: "20px", fontWeight: 700, color }}>{formatCurrency(grandTotal, details.currency)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Notes & Terms */}
+                    {(details.notes || details.terms) && (
+                        <div style={{ paddingTop: "20px", borderTop: `1px solid ${colors.gray200}` }}>
+                            {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
+                            {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ==================== LOWERCASE MINIMAL TEMPLATE ====================
 function LowercaseMinimalTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const docLabel = type === "invoice" ? "invoice" : "quotation";
 
     return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, padding: "48px", boxSizing: "border-box" }}>
-            {/* Simple header */}
-            <div style={{ marginBottom: "48px" }}>
-                <h1 style={{ margin: 0, fontSize: "36px", fontWeight: 300, color: colors.gray800 }}>{docLabel}</h1>
-            </div>
-
-            {/* Info row */}
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "36px", paddingBottom: "24px", borderBottom: `1px solid ${colors.gray200}` }}>
-                <div>
-                    <p style={{ margin: "0 0 4px", fontSize: "10px", color: colors.gray400, textTransform: "lowercase" }}>from</p>
-                    {business.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 500, color: colors.gray800 }}>{business.name}</p>}
-                    {business.address && <p style={{ margin: "4px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
-                </div>
-                <div>
-                    <p style={{ margin: "0 0 4px", fontSize: "10px", color: colors.gray400, textTransform: "lowercase" }}>to</p>
-                    {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 500, color: colors.gray800 }}>{client.name}</p>}
-                    {client.address && <p style={{ margin: "4px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
-                </div>
-                <div style={{ textAlign: "right" }}>
-                    <p style={{ margin: "0 0 8px", fontSize: "11px", color: colors.gray500 }}>#{details.documentNumber}</p>
-                    <p style={{ margin: "0 0 4px", fontSize: "11px", color: colors.gray400 }}>{details.issueDate}</p>
-                    <p style={{ margin: 0, fontSize: "11px", color: colors.gray400 }}>due {details.dueDate}</p>
-                </div>
-            </div>
-
-            {/* Items - minimal */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "32px" }}>
-                <thead>
-                    <tr>
-                        <th style={{ textAlign: "left", padding: "12px 0", fontSize: "10px", color: colors.gray400, fontWeight: 400, textTransform: "lowercase", borderBottom: `1px solid ${colors.gray200}` }}>item</th>
-                        <th style={{ textAlign: "center", padding: "12px 0", fontSize: "10px", color: colors.gray400, fontWeight: 400, textTransform: "lowercase", borderBottom: `1px solid ${colors.gray200}` }}>qty</th>
-                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", color: colors.gray400, fontWeight: 400, textTransform: "lowercase", borderBottom: `1px solid ${colors.gray200}` }}>price</th>
-                        <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", color: colors.gray400, fontWeight: 400, textTransform: "lowercase", borderBottom: `1px solid ${colors.gray200}` }}>total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map((item) => (
-                        <tr key={item.id}>
-                            <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700, borderBottom: `1px solid ${colors.gray100}` }}>{item.description || "Item"}</td>
-                            <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500, borderBottom: `1px solid ${colors.gray100}` }}>{item.quantity}</td>
-                            <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500, borderBottom: `1px solid ${colors.gray100}` }}>{formatCurrency(item.unitPrice, details.currency)}</td>
-                            <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray800, borderBottom: `1px solid ${colors.gray100}` }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            {/* Totals */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "40px" }}>
-                <div style={{ width: "200px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "12px" }}>
-                        <span style={{ color: colors.gray400 }}>subtotal</span>
-                        <span style={{ color: colors.gray600 }}>{formatCurrency(subtotal, details.currency)}</span>
-                    </div>
-                    {totalDiscount > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "12px" }}>
-                            <span style={{ color: colors.gray400 }}>discount</span>
-                            <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
-                        </div>
-                    )}
-                    {totalTax > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "12px" }}>
-                            <span style={{ color: colors.gray400 }}>{taxRateDisplay ? `vat (${taxRateDisplay}%)` : "vat"}</span>
-                            <span style={{ color: colors.gray600 }}>{formatCurrency(totalTax, details.currency)}</span>
-                        </div>
-                    )}
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "16px 0", marginTop: "8px", borderTop: `1px solid ${colors.gray300}` }}>
-                        <span style={{ fontSize: "14px", color: colors.gray600 }}>total</span>
-                        <span style={{ fontSize: "20px", fontWeight: 600, color: colors.gray900 }}>{formatCurrency(grandTotal, details.currency)}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Notes & Terms */}
-            {(details.notes || details.terms) && (
-                <div>
-                    {details.notes && <p style={{ margin: "0 0 16px", fontSize: "12px", color: colors.gray500, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
-                    {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
             )}
+            <div style={{ position: "relative", zIndex: 10, padding: "48px" }}>
+                {/* Simple header */}
+                <div style={{ marginBottom: "48px" }}>
+                    <h1 style={{ margin: 0, fontSize: "36px", fontWeight: 300, color: colors.gray800 }}>{docLabel}</h1>
+                </div>
+
+                {/* Info row */}
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "36px", paddingBottom: "24px", borderBottom: `1px solid ${colors.gray200}` }}>
+                    <div>
+                        <p style={{ margin: "0 0 4px", fontSize: "10px", color: colors.gray400, textTransform: "lowercase" }}>from</p>
+                        {business.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 500, color: colors.gray800 }}>{business.name}</p>}
+                        {business.address && <p style={{ margin: "4px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{business.address}</p>}
+                    </div>
+                    <div>
+                        <p style={{ margin: "0 0 4px", fontSize: "10px", color: colors.gray400, textTransform: "lowercase" }}>to</p>
+                        {client.name && <p style={{ margin: 0, fontSize: "14px", fontWeight: 500, color: colors.gray800 }}>{client.name}</p>}
+                        {client.address && <p style={{ margin: "4px 0 0", fontSize: "11px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                        <p style={{ margin: "0 0 8px", fontSize: "11px", color: colors.gray500 }}>#{details.documentNumber}</p>
+                        <p style={{ margin: "0 0 4px", fontSize: "11px", color: colors.gray400 }}>{details.issueDate}</p>
+                        <p style={{ margin: 0, fontSize: "11px", color: colors.gray400 }}>due {details.dueDate}</p>
+                    </div>
+                </div>
+
+                {/* Items - minimal */}
+                <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "32px" }}>
+                    <thead>
+                        <tr>
+                            <th style={{ textAlign: "left", padding: "12px 0", fontSize: "10px", color: colors.gray400, fontWeight: 400, textTransform: "lowercase", borderBottom: `1px solid ${colors.gray200}` }}>item</th>
+                            <th style={{ textAlign: "center", padding: "12px 0", fontSize: "10px", color: colors.gray400, fontWeight: 400, textTransform: "lowercase", borderBottom: `1px solid ${colors.gray200}` }}>qty</th>
+                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", color: colors.gray400, fontWeight: 400, textTransform: "lowercase", borderBottom: `1px solid ${colors.gray200}` }}>price</th>
+                            <th style={{ textAlign: "right", padding: "12px 0", fontSize: "10px", color: colors.gray400, fontWeight: 400, textTransform: "lowercase", borderBottom: `1px solid ${colors.gray200}` }}>total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items.map((item) => (
+                            <tr key={item.id}>
+                                <td style={{ padding: "14px 0", fontSize: "13px", color: colors.gray700, borderBottom: `1px solid ${colors.gray100}` }}>{item.description || "Item"}</td>
+                                <td style={{ padding: "14px 0", textAlign: "center", fontSize: "13px", color: colors.gray500, borderBottom: `1px solid ${colors.gray100}` }}>{item.quantity}</td>
+                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray500, borderBottom: `1px solid ${colors.gray100}` }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                <td style={{ padding: "14px 0", textAlign: "right", fontSize: "13px", color: colors.gray800, borderBottom: `1px solid ${colors.gray100}` }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                {/* Totals */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "40px" }}>
+                    <div style={{ width: "200px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "12px" }}>
+                            <span style={{ color: colors.gray400 }}>subtotal</span>
+                            <span style={{ color: colors.gray600 }}>{formatCurrency(subtotal, details.currency)}</span>
+                        </div>
+                        {totalDiscount > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "12px" }}>
+                                <span style={{ color: colors.gray400 }}>discount</span>
+                                <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
+                            </div>
+                        )}
+                        {totalTax > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "12px" }}>
+                                <span style={{ color: colors.gray400 }}>{taxRateDisplay ? `vat (${taxRateDisplay}%)` : "vat"}</span>
+                                <span style={{ color: colors.gray600 }}>{formatCurrency(totalTax, details.currency)}</span>
+                            </div>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "16px 0", marginTop: "8px", borderTop: `1px solid ${colors.gray300}` }}>
+                            <span style={{ fontSize: "14px", color: colors.gray600 }}>total</span>
+                            <span style={{ fontSize: "20px", fontWeight: 600, color: colors.gray900 }}>{formatCurrency(grandTotal, details.currency)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Notes & Terms */}
+                {(details.notes || details.terms) && (
+                    <div>
+                        {details.notes && <p style={{ margin: "0 0 16px", fontSize: "12px", color: colors.gray500, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
+                        {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
 
 // ==================== BEACH WAVE TEMPLATE ====================
 function BeachWaveTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const docLabel = type === "invoice" ? "Invoice" : "Quotation";
     const lightColor = lightenColor(color, 0.9);
 
     return (
         <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, position: "relative", boxSizing: "border-box" }}>
-            <div style={{ padding: "40px 48px", paddingBottom: "100px" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
+            <div style={{ position: "relative", zIndex: 10, padding: "40px 48px", paddingBottom: "100px" }}>
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "36px" }}>
                     <div>
@@ -1876,104 +2059,114 @@ function BeachWaveTemplate({ document, color, subtotal, totalDiscount, totalTax,
             </div>
 
             {/* Wave decoration at bottom */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "60px", overflow: "hidden" }}>
-                <svg viewBox="0 0 595 60" preserveAspectRatio="none" style={{ width: "100%", height: "100%" }}>
-                    <path d="M0,30 Q150,0 297.5,30 T595,30 L595,60 L0,60 Z" fill={lightColor} opacity="0.6" />
-                    <path d="M0,40 Q150,15 297.5,40 T595,40 L595,60 L0,60 Z" fill={color} opacity="0.4" />
-                </svg>
-            </div>
+            {!customTemplate && (
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "60px", overflow: "hidden" }}>
+                    <svg viewBox="0 0 595 60" preserveAspectRatio="none" style={{ width: "100%", height: "100%" }}>
+                        <path d="M0,30 Q150,0 297.5,30 T595,30 L595,60 L0,60 Z" fill={lightColor} opacity="0.6" />
+                        <path d="M0,40 Q150,15 297.5,40 T595,40 L595,60 L0,60 Z" fill={color} opacity="0.4" />
+                    </svg>
+                </div>
+            )}
         </div>
     );
 }
 
 // ==================== BLUE HEADER BAR TEMPLATE ====================
 function BlueHeaderBarTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
 
     return (
-        <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
-            {/* Full width header bar */}
-            <div style={{ backgroundColor: color, padding: "32px 48px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                    {business.name && <h2 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: colors.white }}>{business.name}</h2>}
-                    {business.email && <p style={{ margin: "8px 0 0", fontSize: "12px", color: colors.white, opacity: 0.85 }}>{business.email}</p>}
+        <div id="document-preview" style={{ position: "relative", fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, boxSizing: "border-box" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
-                <div style={{ textAlign: "right" }}>
-                    <h1 style={{ margin: 0, fontSize: "32px", fontWeight: 800, color: colors.white, letterSpacing: "0.08em" }}>{docLabel}</h1>
-                </div>
-            </div>
-
-            <div style={{ padding: "32px 48px" }}>
-                {/* Info row */}
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "28px", paddingBottom: "20px", borderBottom: `1px solid ${colors.gray200}` }}>
+            )}
+            <div style={{ position: "relative", zIndex: 10 }}>
+                {/* Full width header bar */}
+                <div style={{ backgroundColor: color, padding: "32px 48px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                        <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Bill To</p>
-                        {client.name && <p style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
-                        {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                        {business.name && <h2 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: colors.white }}>{business.name}</h2>}
+                        {business.email && <p style={{ margin: "8px 0 0", fontSize: "12px", color: colors.white, opacity: 0.85 }}>{business.email}</p>}
                     </div>
                     <div style={{ textAlign: "right" }}>
-                        <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.gray600 }}><span style={{ color: colors.gray400 }}>{docLabel} #:</span> {details.documentNumber}</p>
-                        <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.gray600 }}><span style={{ color: colors.gray400 }}>Date:</span> {details.issueDate}</p>
-                        <p style={{ margin: 0, fontSize: "12px", color: colors.gray600 }}><span style={{ color: colors.gray400 }}>Due:</span> {details.dueDate}</p>
+                        <h1 style={{ margin: 0, fontSize: "32px", fontWeight: 800, color: colors.white, letterSpacing: "0.08em" }}>{docLabel}</h1>
                     </div>
                 </div>
 
-                {/* Items */}
-                <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
-                    <thead>
-                        <tr style={{ backgroundColor: colors.gray100 }}>
-                            <th style={{ textAlign: "left", padding: "14px 16px", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Description</th>
-                            <th style={{ textAlign: "center", padding: "14px 16px", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Qty</th>
-                            <th style={{ textAlign: "right", padding: "14px 16px", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Rate</th>
-                            <th style={{ textAlign: "right", padding: "14px 16px", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map((item) => (
-                            <tr key={item.id} style={{ borderBottom: `1px solid ${colors.gray100}` }}>
-                                <td style={{ padding: "14px 16px", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
-                                <td style={{ padding: "14px 16px", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
-                                <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
-                                <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                <div style={{ padding: "32px 48px" }}>
+                    {/* Info row */}
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "28px", paddingBottom: "20px", borderBottom: `1px solid ${colors.gray200}` }}>
+                        <div>
+                            <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 600, color: colors.gray400, textTransform: "uppercase" }}>Bill To</p>
+                            {client.name && <p style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: colors.gray800 }}>{client.name}</p>}
+                            {client.address && <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.gray500, whiteSpace: "pre-line" }}>{client.address}</p>}
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                            <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.gray600 }}><span style={{ color: colors.gray400 }}>{docLabel} #:</span> {details.documentNumber}</p>
+                            <p style={{ margin: "0 0 4px", fontSize: "12px", color: colors.gray600 }}><span style={{ color: colors.gray400 }}>Date:</span> {details.issueDate}</p>
+                            <p style={{ margin: 0, fontSize: "12px", color: colors.gray600 }}><span style={{ color: colors.gray400 }}>Due:</span> {details.dueDate}</p>
+                        </div>
+                    </div>
+
+                    {/* Items */}
+                    <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "28px" }}>
+                        <thead>
+                            <tr style={{ backgroundColor: colors.gray100 }}>
+                                <th style={{ textAlign: "left", padding: "14px 16px", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Description</th>
+                                <th style={{ textAlign: "center", padding: "14px 16px", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Qty</th>
+                                <th style={{ textAlign: "right", padding: "14px 16px", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Rate</th>
+                                <th style={{ textAlign: "right", padding: "14px 16px", fontSize: "11px", fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }}>Amount</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {items.map((item) => (
+                                <tr key={item.id} style={{ borderBottom: `1px solid ${colors.gray100}` }}>
+                                    <td style={{ padding: "14px 16px", fontSize: "13px", color: colors.gray700 }}>{item.description || "Item"}</td>
+                                    <td style={{ padding: "14px 16px", textAlign: "center", fontSize: "13px", color: colors.gray500 }}>{item.quantity}</td>
+                                    <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", color: colors.gray500 }}>{formatCurrency(item.unitPrice, details.currency)}</td>
+                                    <td style={{ padding: "14px 16px", textAlign: "right", fontSize: "13px", fontWeight: 600, color: colors.gray800 }}>{formatCurrency(item.quantity * item.unitPrice, details.currency)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
 
-                {/* Totals */}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
-                    <div style={{ width: "260px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", fontSize: "13px" }}>
-                            <span style={{ color: colors.gray500 }}>Subtotal</span>
-                            <span style={{ color: colors.gray700 }}>{formatCurrency(subtotal, details.currency)}</span>
-                        </div>
-                        {totalDiscount > 0 && (
+                    {/* Totals */}
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
+                        <div style={{ width: "260px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", fontSize: "13px" }}>
-                                <span style={{ color: colors.gray500 }}>Discount</span>
-                                <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
+                                <span style={{ color: colors.gray500 }}>Subtotal</span>
+                                <span style={{ color: colors.gray700 }}>{formatCurrency(subtotal, details.currency)}</span>
                             </div>
-                        )}
-                        {totalTax > 0 && (
-                            <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", fontSize: "13px" }}>
-                                <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
-                                <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
+                            {totalDiscount > 0 && (
+                                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", fontSize: "13px" }}>
+                                    <span style={{ color: colors.gray500 }}>Discount</span>
+                                    <span style={{ color: colors.green600 }}>-{formatCurrency(totalDiscount, details.currency)}</span>
+                                </div>
+                            )}
+                            {totalTax > 0 && (
+                                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", fontSize: "13px" }}>
+                                    <span style={{ color: colors.gray500 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "VAT"}</span>
+                                    <span style={{ color: colors.gray700 }}>{formatCurrency(totalTax, details.currency)}</span>
+                                </div>
+                            )}
+                            <div style={{ display: "flex", justifyContent: "space-between", padding: "16px 20px", marginTop: "12px", backgroundColor: color, borderRadius: "8px" }}>
+                                <span style={{ fontSize: "14px", fontWeight: 600, color: colors.white }}>Total Due</span>
+                                <span style={{ fontSize: "20px", fontWeight: 700, color: colors.white }}>{formatCurrency(grandTotal, details.currency)}</span>
                             </div>
-                        )}
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "16px 20px", marginTop: "12px", backgroundColor: color, borderRadius: "8px" }}>
-                            <span style={{ fontSize: "14px", fontWeight: 600, color: colors.white }}>Total Due</span>
-                            <span style={{ fontSize: "20px", fontWeight: 700, color: colors.white }}>{formatCurrency(grandTotal, details.currency)}</span>
                         </div>
                     </div>
+
+                    {/* Notes & Terms */}
+                    {(details.notes || details.terms) && (
+                        <div style={{ paddingTop: "20px", borderTop: `1px solid ${colors.gray200}` }}>
+                            {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
+                            {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
+                        </div>
+                    )}
                 </div>
-
-                {/* Notes & Terms */}
-                {(details.notes || details.terms) && (
-                    <div style={{ paddingTop: "20px", borderTop: `1px solid ${colors.gray200}` }}>
-                        {details.notes && <p style={{ margin: "0 0 12px", fontSize: "12px", color: colors.gray600, lineHeight: 1.7, whiteSpace: "pre-line" }}>{details.notes}</p>}
-                        {details.terms && <p style={{ margin: 0, fontSize: "10px", color: colors.gray400, lineHeight: 1.6, whiteSpace: "pre-line" }}>{details.terms}</p>}
-                    </div>
-                )}
             </div>
         </div>
     );
@@ -1981,14 +2174,20 @@ function BlueHeaderBarTemplate({ document, color, subtotal, totalDiscount, total
 
 // ==================== CIRCULAR MODERN TEMPLATE ====================
 function CircularModernTemplate({ document, color, subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay }: TemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
 
     return (
         <div id="document-preview" style={{ fontFamily: fontStack, width: "595px", minHeight: "800px", backgroundColor: colors.white, padding: "40px 48px", boxSizing: "border-box", position: "relative" }}>
+            {/* Custom Letterhead Background */}
+            {customTemplate && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
+                    <img src={customTemplate} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+            )}
             {/* Circle accent */}
-            <div style={{ position: "absolute", top: "-60px", right: "-60px", width: "200px", height: "200px", borderRadius: "50%", backgroundColor: color, opacity: 0.1 }}></div>
-            <div style={{ position: "absolute", top: "20px", right: "20px", width: "80px", height: "80px", borderRadius: "50%", backgroundColor: color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {!customTemplate && <div style={{ position: "absolute", top: "-60px", right: "-60px", width: "200px", height: "200px", borderRadius: "50%", backgroundColor: color, opacity: 0.1 }}></div>}
+            <div style={{ position: "absolute", top: "20px", right: "20px", width: "80px", height: "80px", borderRadius: "50%", backgroundColor: color, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 20 }}>
                 <span style={{ fontSize: "10px", fontWeight: 700, color: colors.white, textAlign: "center", lineHeight: 1.2 }}>{docLabel}</span>
             </div>
 

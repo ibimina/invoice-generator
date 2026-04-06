@@ -713,12 +713,12 @@ export function StyleStep() {
                 </CardContent>
             </Card>
 
-            {/* Custom Template Upload */}
+            {/* Custom Letterhead Upload */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Custom Watermark (Optional)</CardTitle>
+                    <CardTitle className="text-lg">Custom Letterhead (Optional)</CardTitle>
                     <CardDescription>
-                        Upload your company logo or brand mark as a subtle watermark
+                        Upload your company letterhead as a full-page background template
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -755,10 +755,10 @@ export function StyleStep() {
                                 <>
                                     <Upload className="h-8 w-8 text-slate-400" />
                                     <span className="mt-2 text-sm text-slate-500">
-                                        Click to upload watermark
+                                        Click to upload letterhead
                                     </span>
                                     <span className="mt-1 text-xs text-slate-400">
-                                        PNG, JPG · Max 5MB
+                                        PNG, JPG · Max 5MB · A4 recommended
                                     </span>
                                 </>
                             )}
@@ -774,10 +774,10 @@ export function StyleStep() {
                         <div className="text-sm text-slate-500">
                             <p className="font-medium text-slate-700">Best practices:</p>
                             <ul className="mt-2 list-inside list-disc space-y-1">
-                                <li>Use your logo or monogram</li>
-                                <li>High contrast images work best</li>
-                                <li>Appears as subtle centered watermark</li>
-                                <li>PNG with transparency recommended</li>
+                                <li>Use A4 size (595×842px or similar)</li>
+                                <li>Leave space for invoice content</li>
+                                <li>Letterhead becomes page background</li>
+                                <li>Invoice overlays on top</li>
                             </ul>
                         </div>
                     </div>

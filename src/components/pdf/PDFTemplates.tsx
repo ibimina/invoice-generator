@@ -189,7 +189,7 @@ function calculateTotals(document: DocumentData) {
 // CLASSIC TEMPLATE - Matches HTML preview exactly
 // ============================================================================
 export function ClassicPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, notes, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -198,6 +198,20 @@ export function ClassicPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={baseStyles.page}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Header - Logo+Business left, Invoice title right */}
                 <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 16 }]}>
                     <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
@@ -330,7 +344,7 @@ export function ClassicPDF({ document }: PDFTemplateProps) {
 // MODERN TEMPLATE - Matches HTML preview exactly
 // ============================================================================
 export function ModernPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, notes, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -340,6 +354,20 @@ export function ModernPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={{ fontFamily: "Helvetica", fontSize: 10, padding: 0, backgroundColor: colors.white }}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Header Banner */}
                 <View style={{ backgroundColor: color, padding: "48 52 36 52" }}>
                     <View style={[baseStyles.row, baseStyles.spaceBetween, { alignItems: "center" }]}>
@@ -471,7 +499,7 @@ export function ModernPDF({ document }: PDFTemplateProps) {
 // MINIMALIST TEMPLATE - Matches HTML preview exactly
 // ============================================================================
 export function MinimalistPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, notes, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -480,6 +508,20 @@ export function MinimalistPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { paddingHorizontal: 50 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Header */}
                 <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 15 }]}>
                     <View>
@@ -589,7 +631,7 @@ export function MinimalistPDF({ document }: PDFTemplateProps) {
 // CORPORATE TEMPLATE
 // ============================================================================
 export function CorporatePDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, notes, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -598,6 +640,20 @@ export function CorporatePDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { paddingLeft: 0, paddingTop: 0, paddingBottom: 0 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 <View style={{ flexDirection: "row", minHeight: "100%" }}>
                     {/* Sidebar */}
                     <View style={{ width: 190, backgroundColor: color, padding: 24, paddingTop: 44, justifyContent: "space-between", minHeight: "100%" }}>
@@ -722,7 +778,7 @@ export function CorporatePDF({ document }: PDFTemplateProps) {
 // CREATIVE TEMPLATE - 4 columns
 // ============================================================================
 export function CreativePDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, notes, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -732,6 +788,20 @@ export function CreativePDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={baseStyles.page}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Header */}
                 <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 20 }]}>
                     <View>
@@ -846,7 +916,7 @@ export function CreativePDF({ document }: PDFTemplateProps) {
 // SIMPLE CLEAN TEMPLATE - 4 columns
 // ============================================================================
 export function SimpleCleanPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, notes, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -855,6 +925,20 @@ export function SimpleCleanPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={baseStyles.page}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Header */}
                 <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 40 }]}>
                     <View>
@@ -962,7 +1046,7 @@ export function SimpleCleanPDF({ document }: PDFTemplateProps) {
 // SIGNATURE TEMPLATE
 // ============================================================================
 export function SignaturePDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, notes, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -971,6 +1055,20 @@ export function SignaturePDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { paddingHorizontal: 48 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 48 }]}>
                     <View>
                         {business.name && <Text style={{ fontSize: 20, fontWeight: 600, color: colors.gray800, marginBottom: 4 }}>{business.name}</Text>}
@@ -1038,7 +1136,7 @@ export function SignaturePDF({ document }: PDFTemplateProps) {
 // TOTAL HIGHLIGHT TEMPLATE
 // ============================================================================
 export function TotalHighlightPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1047,6 +1145,20 @@ export function TotalHighlightPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={baseStyles.page}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 32 }]}>
                     <View>
                         {business.name && <Text style={{ fontSize: 22, fontWeight: 700, color: colors.gray800 }}>{business.name}</Text>}
@@ -1102,7 +1214,7 @@ export function TotalHighlightPDF({ document }: PDFTemplateProps) {
 // BLUE BANNER TEMPLATE
 // ============================================================================
 export function BlueBannerPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1111,6 +1223,20 @@ export function BlueBannerPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { paddingTop: 0 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 <View style={{ backgroundColor: color, marginHorizontal: -40, paddingHorizontal: 40, paddingVertical: 24, marginBottom: 30 }}>
                     <View style={[baseStyles.row, baseStyles.spaceBetween, { alignItems: "center" }]}>
                         <View>
@@ -1176,7 +1302,7 @@ export function BlueBannerPDF({ document }: PDFTemplateProps) {
 // WATERCOLOR TEMPLATE
 // ============================================================================
 export function WatercolorPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1186,6 +1312,20 @@ export function WatercolorPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { position: "relative" }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Watercolor gradient effect using SVG */}
                 <Svg style={{ position: "absolute", top: 0, left: 0, right: 0, height: 120 }}>
                     <Defs>
@@ -1260,7 +1400,7 @@ export function WatercolorPDF({ document }: PDFTemplateProps) {
 // SIDEBAR TEMPLATE
 // ============================================================================
 export function SidebarPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1269,6 +1409,20 @@ export function SidebarPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { paddingLeft: 0, paddingTop: 0, paddingBottom: 0 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 <View style={{ flexDirection: "row", minHeight: "100%" }}>
                     {/* Left sidebar with accent color */}
                     <View style={{ width: 50, backgroundColor: color, justifyContent: "center", alignItems: "center" }}>
@@ -1352,7 +1506,7 @@ export function SidebarPDF({ document }: PDFTemplateProps) {
 // BLUE ACCENT TEMPLATE
 // ============================================================================
 export function BlueAccentPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1361,6 +1515,20 @@ export function BlueAccentPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { padding: "40pt 48pt" }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Header */}
                 <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 40, paddingBottom: 20, borderBottomWidth: 3, borderBottomColor: color }]}>
                     <View>
@@ -1442,7 +1610,7 @@ export function BlueAccentPDF({ document }: PDFTemplateProps) {
 // TWO COLUMN TEMPLATE
 // ============================================================================
 export function TwoColumnPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1451,6 +1619,20 @@ export function TwoColumnPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { padding: 0 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Split header */}
                 <View style={{ flexDirection: "row" }}>
                     <View style={{ flex: 1, padding: 32, backgroundColor: colors.gray50 }}>
@@ -1529,7 +1711,7 @@ export function TwoColumnPDF({ document }: PDFTemplateProps) {
 // LOWERCASE MINIMAL TEMPLATE
 // ============================================================================
 export function LowercaseMinimalPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
     const docLabel = type === "invoice" ? "invoice" : "quotation";
@@ -1537,6 +1719,20 @@ export function LowercaseMinimalPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { paddingHorizontal: 48 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Simple header - just docLabel */}
                 <View style={{ marginBottom: 48 }}>
                     <Text style={{ fontSize: 36, fontWeight: 300, color: colors.gray800 }}>{docLabel}</Text>
@@ -1611,7 +1807,7 @@ export function LowercaseMinimalPDF({ document }: PDFTemplateProps) {
 // BEACH WAVE TEMPLATE
 // ============================================================================
 export function BeachWavePDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, notes, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1621,6 +1817,20 @@ export function BeachWavePDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { paddingBottom: 80 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Header */}
                 <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 30 }]}>
                     <View>
@@ -1719,7 +1929,7 @@ export function BeachWavePDF({ document }: PDFTemplateProps) {
 // BLUE HEADER BAR TEMPLATE
 // ============================================================================
 export function BlueHeaderBarPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1728,6 +1938,20 @@ export function BlueHeaderBarPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={[baseStyles.page, { paddingTop: 0 }]}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 <View style={{ backgroundColor: color, marginHorizontal: -40, paddingHorizontal: 40, paddingVertical: 30, marginBottom: 30 }}>
                     <View style={[baseStyles.row, baseStyles.spaceBetween, { alignItems: "center" }]}>
                         <View>
@@ -1791,7 +2015,7 @@ export function BlueHeaderBarPDF({ document }: PDFTemplateProps) {
 // CIRCULAR MODERN TEMPLATE
 // ============================================================================
 export function CircularModernPDF({ document }: PDFTemplateProps) {
-    const { type, business, client, details, items } = document;
+    const { type, business, client, details, items, customTemplate } = document;
     const { terms, currency = "USD" } = details;
     const color = ACCENT_COLORS[document.accentColor as AccentColor] || document.accentColor;
     const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
@@ -1800,6 +2024,20 @@ export function CircularModernPDF({ document }: PDFTemplateProps) {
     return (
         <Document>
             <Page size="A4" style={baseStyles.page}>
+                {/* Custom Letterhead Background */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                )}
                 {/* Large decorative circle - 200x200, positioned top right, extends beyond page */}
                 <View style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: color, opacity: 0.1 }} />
 
@@ -1873,10 +2111,130 @@ export function CircularModernPDF({ document }: PDFTemplateProps) {
 }
 
 // ============================================================================
+// LETTERHEAD TEMPLATE - Uses uploaded letterhead as background, content only
+// ============================================================================
+export function LetterheadPDF({ document }: PDFTemplateProps) {
+    const { type, client, details, items, customTemplate, business } = document;
+    const { terms, notes, currency = "USD" } = details;
+    const { subtotal, totalDiscount, totalTax, grandTotal, taxRateDisplay } = calculateTotals(document);
+    const docLabel = type === "invoice" ? "INVOICE" : "QUOTATION";
+
+    return (
+        <Document>
+            <Page size="A4" style={{ fontFamily: "Helvetica", fontSize: 10, paddingTop: 170, paddingBottom: 80, paddingHorizontal: 45 }}>
+                {/* Letterhead Background - Full Page, Fixed to repeat on all pages */}
+                {customTemplate && (
+                    <Image
+                        src={customTemplate}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: 595,
+                            height: 842,
+                        }}
+                        fixed
+                    />
+                )}
+
+                {/* Date and Document Number Row */}
+                <View style={[baseStyles.row, baseStyles.spaceBetween, { marginBottom: 8 }]}>
+                    <Text style={{ fontSize: 11, color: colors.gray700 }}>{formatDate(details.issueDate)}</Text>
+                    <Text style={{ fontSize: 12, fontWeight: 600, color: colors.gray800 }}>{docLabel} #: {details.documentNumber}</Text>
+                </View>
+
+                {/* Client Info */}
+                <View style={{ marginBottom: 24 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 600, color: colors.gray800 }}>{client.name || "Client Name"}</Text>
+                    {client.address && <Text style={{ fontSize: 11, color: colors.gray600, marginTop: 2 }}>{client.address}</Text>}
+                    {client.company && <Text style={{ fontSize: 11, color: colors.gray600, marginTop: 2 }}>{client.company}</Text>}
+                </View>
+
+                {/* Document Title */}
+                <View style={{ alignItems: "center", marginBottom: 24 }}>
+                    <Text style={{ fontSize: 14, fontWeight: 700, color: colors.gray800, textDecoration: "underline" }}>
+                        REQUEST FOR {docLabel}
+                    </Text>
+                </View>
+
+                {/* Items Table */}
+                <View style={baseStyles.table}>
+                    <View style={[baseStyles.tableHeader, { backgroundColor: colors.gray100, paddingHorizontal: 8, paddingVertical: 10 }]}>
+                        <Text style={{ width: 30, fontSize: 10, fontWeight: 600, color: colors.gray700 }}>#</Text>
+                        <Text style={[baseStyles.colDesc, { fontSize: 10, fontWeight: 600, color: colors.gray700 }]}>Description</Text>
+                        <Text style={[baseStyles.colQty, { fontSize: 10, fontWeight: 600, color: colors.gray700 }]}>Quantity</Text>
+                        <Text style={[baseStyles.colRate, { fontSize: 10, fontWeight: 600, color: colors.gray700 }]}>Unit Price</Text>
+                        <Text style={[baseStyles.colAmount, { fontSize: 10, fontWeight: 600, color: colors.gray700 }]}>Total</Text>
+                    </View>
+                    {items.map((item, index) => {
+                        const lineTotal = item.quantity * item.unitPrice;
+                        return (
+                            <View key={index} style={[baseStyles.tableRow, { paddingHorizontal: 8 }]}>
+                                <Text style={{ width: 30, fontSize: 11, color: colors.gray600 }}>{index + 1}</Text>
+                                <Text style={[baseStyles.colDesc, { fontSize: 11, color: colors.gray800 }]}>{item.description || "Item"}</Text>
+                                <Text style={[baseStyles.colQty, { fontSize: 11, color: colors.gray600 }]}>{item.quantity}</Text>
+                                <Text style={[baseStyles.colRate, { fontSize: 11, color: colors.gray600 }]}>{formatCurrency(item.unitPrice, currency)}</Text>
+                                <Text style={[baseStyles.colAmount, { fontSize: 11, fontWeight: 600, color: colors.gray800 }]}>{formatCurrency(lineTotal, currency)}</Text>
+                            </View>
+                        );
+                    })}
+                </View>
+
+                {/* Totals */}
+                <View style={{ alignItems: "flex-end", marginTop: 16, marginBottom: 24 }}>
+                    <View style={{ width: 200 }}>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }}>
+                            <Text style={{ fontSize: 11, color: colors.gray600 }}>Subtotal:</Text>
+                            <Text style={{ fontSize: 11, color: colors.gray800 }}>{formatCurrency(subtotal, currency)}</Text>
+                        </View>
+                        {totalDiscount > 0 && (
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }}>
+                                <Text style={{ fontSize: 11, color: colors.gray600 }}>Discount:</Text>
+                                <Text style={{ fontSize: 11, color: colors.green600 }}>-{formatCurrency(totalDiscount, currency)}</Text>
+                            </View>
+                        )}
+                        {totalTax > 0 && (
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }}>
+                                <Text style={{ fontSize: 11, color: colors.gray600 }}>{taxRateDisplay ? `VAT (${taxRateDisplay}%):` : "VAT:"}</Text>
+                                <Text style={{ fontSize: 11, color: colors.gray800 }}>{formatCurrency(totalTax, currency)}</Text>
+                            </View>
+                        )}
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.gray300, marginTop: 4 }}>
+                            <Text style={{ fontSize: 12, fontWeight: 700, color: colors.gray800 }}>Total:</Text>
+                            <Text style={{ fontSize: 14, fontWeight: 700, color: colors.gray900 }}>{formatCurrency(grandTotal, currency)}</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Terms & Conditions */}
+                {terms && (
+                    <View style={{ marginBottom: 20 }} wrap={false}>
+                        <Text style={{ fontSize: 11, fontWeight: 600, color: colors.gray700, marginBottom: 6 }}>Terms & Conditions</Text>
+                        <Text style={{ fontSize: 10, color: colors.gray500, lineHeight: 1.6 }}>{terms}</Text>
+                    </View>
+                )}
+
+                {/* Sign-off */}
+                <View style={{ marginTop: 16 }} wrap={false}>
+                    {notes && <Text style={{ fontSize: 11, color: colors.gray700, marginBottom: 8 }}>{notes}</Text>}
+                    <Text style={{ fontSize: 11, color: colors.gray700 }}>Yours faithfully,</Text>
+                    <Text style={{ fontSize: 12, fontWeight: 600, color: colors.gray800, marginTop: 4 }}>{business.name || "Your Business"}</Text>
+                </View>
+            </Page>
+        </Document>
+    );
+}
+
+// ============================================================================
 // EXPORT PDF TEMPLATE SELECTOR
 // ============================================================================
 export function getPDFTemplate(document: DocumentData) {
-    const { template } = document;
+    const { template, customTemplate } = document;
+
+    // If a custom letterhead is uploaded, use the Letterhead template
+    if (customTemplate) {
+        return <LetterheadPDF document={document} />;
+    }
 
     switch (template) {
         case "modern":
