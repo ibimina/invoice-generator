@@ -51,7 +51,7 @@ const baseStyles = StyleSheet.create({
         fontFamily: "Helvetica",
         fontSize: 10,
         paddingTop: 28,
-        paddingBottom: 28,
+        paddingBottom: 60,
         paddingHorizontal: 20,
         backgroundColor: colors.white,
     },
@@ -77,6 +77,7 @@ const baseStyles = StyleSheet.create({
         paddingVertical: 10,
         borderBottomWidth: 1,
         borderBottomColor: colors.gray100,
+        wrap: false,
     },
     // 4 Column layout matching HTML: Description (flex), Qty (60px), Rate (100px), Amount (100px)
     colDesc: { flex: 1 },
@@ -106,7 +107,8 @@ const baseStyles = StyleSheet.create({
         color: colors.gray800,
     },
     terms: {
-        marginTop: 12,
+        marginTop: 40,
+        wrap: false,
     },
     termsTitle: {
         fontSize: 10,
@@ -121,7 +123,38 @@ const baseStyles = StyleSheet.create({
         color: colors.gray500,
         lineHeight: 1.8,
     },
+    footer: {
+        position: "absolute",
+        bottom: 20,
+        left: 20,
+        right: 20,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    footerText: {
+        fontSize: 9,
+        color: colors.gray400,
+    },
 });
+
+// Reusable footer component with page numbers
+interface PDFFooterProps {
+    businessName: string;
+    accentColor?: string;
+}
+
+function PDFFooter({ businessName, accentColor }: PDFFooterProps) {
+    return (
+        <View style={baseStyles.footer} fixed>
+            <Text style={baseStyles.footerText}>{businessName}</Text>
+            <Text
+                style={baseStyles.footerText}
+                render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+            />
+        </View>
+    );
+}
 
 interface PDFTemplateProps {
     document: DocumentData;
@@ -280,11 +313,14 @@ export function ClassicPDF({ document }: PDFTemplateProps) {
                     <Text style={{ fontSize: 12, color: colors.gray600, lineHeight: 1.6, marginBottom: 12 }}>{notes}</Text>
                 )}
                 {terms && (
-                    <View style={baseStyles.terms}>
+                    <View style={baseStyles.terms} wrap={false}>
                         <Text style={baseStyles.termsTitle}>Terms & Conditions</Text>
                         <Text style={baseStyles.termsText}>{terms}</Text>
                     </View>
                 )}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -369,7 +405,7 @@ export function ModernPDF({ document }: PDFTemplateProps) {
                         {items.map((item, index) => {
                             const lineTotal = item.quantity * item.unitPrice;
                             return (
-                                <View key={index} style={{ flexDirection: "row", paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+                                <View key={index} wrap={false} style={{ flexDirection: "row", paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
                                     <View style={[baseStyles.colDesc]}>
                                         <Text style={{ fontSize: 14, fontWeight: 500, color: colors.gray800 }}>{item.description || "Item"}</Text>
                                         {item.discountPercent > 0 && (
@@ -403,9 +439,9 @@ export function ModernPDF({ document }: PDFTemplateProps) {
                                     <Text style={{ fontSize: 14, color: colors.gray800 }}>{formatCurrency(totalTax, currency)}</Text>
                                 </View>
                             )}
-                            <View style={{ backgroundColor: color, padding: 16, borderRadius: 8, marginTop: 8 }}>
-                                <Text style={{ fontSize: 11, color: colors.white, opacity: 0.9 }}>{type === "invoice" ? "Total Due" : "Total"}</Text>
-                                <Text style={{ fontSize: 24, fontWeight: 700, color: colors.white, marginTop: 4 }}>{formatCurrency(grandTotal, currency)}</Text>
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", paddingTop: 12, marginTop: 8, borderTopWidth: 2, borderTopColor: color }}>
+                                <Text style={{ fontSize: 14, fontWeight: 600, color: colors.gray800 }}>{type === "invoice" ? "Total Due" : "Total"}</Text>
+                                <Text style={{ fontSize: 18, fontWeight: 700, color: color }}>{formatCurrency(grandTotal, currency)}</Text>
                             </View>
                         </View>
                     </View>
@@ -413,17 +449,19 @@ export function ModernPDF({ document }: PDFTemplateProps) {
                     {/* Notes & Terms */}
                     {notes && (
                         <View style={{ marginBottom: 20 }}>
-                            <Text style={{ fontSize: 11, fontWeight: 600, color: colors.gray700, marginBottom: 8 }}>Notes</Text>
                             <Text style={{ fontSize: 13, color: colors.gray600, lineHeight: 1.6 }}>{notes}</Text>
                         </View>
                     )}
                     {terms && (
-                        <View style={{ paddingTop: 20, borderTopWidth: 1, borderTopColor: colors.gray200 }}>
+                        <View wrap={false} style={{ paddingTop: 20, borderTopWidth: 1, borderTopColor: colors.gray200 }}>
                             <Text style={{ fontSize: 11, fontWeight: 600, color: colors.gray700, marginBottom: 8 }}>Terms & Conditions</Text>
                             <Text style={{ fontSize: 12, color: colors.gray500, lineHeight: 1.7 }}>{terms}</Text>
                         </View>
                     )}
                 </View>
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -488,7 +526,7 @@ export function MinimalistPDF({ document }: PDFTemplateProps) {
                     {items.map((item, index) => {
                         const lineTotal = item.quantity * item.unitPrice;
                         return (
-                            <View key={index} style={{ flexDirection: "row", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+                            <View key={index} wrap={false} style={{ flexDirection: "row", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
                                 <View style={[baseStyles.colDesc, { flexDirection: "row", alignItems: "center" }]}>
                                     <Text style={{ fontSize: 10, color: colors.gray700 }}>{item.description}</Text>
                                     {item.discountPercent > 0 && <Text style={{ marginLeft: 6, fontSize: 9, color: colors.gray400 }}>{item.discountPercent}% off</Text>}
@@ -530,16 +568,18 @@ export function MinimalistPDF({ document }: PDFTemplateProps) {
                 {/* Notes & Terms */}
                 {notes && (
                     <View style={{ marginTop: 40 }}>
-                        <Text style={{ fontSize: 8, color: colors.gray400, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Notes</Text>
                         <Text style={{ fontSize: 9, color: colors.gray500, lineHeight: 1.6 }}>{notes}</Text>
                     </View>
                 )}
                 {terms && (
-                    <View style={{ marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: colors.gray200 }}>
+                    <View wrap={false} style={{ marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: colors.gray200 }}>
                         <Text style={{ fontSize: 10, fontWeight: 600, color: color, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Terms</Text>
                         <Text style={{ fontSize: 12, color: colors.gray400, lineHeight: 1.8 }}>{terms}</Text>
                     </View>
                 )}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -616,7 +656,7 @@ export function CorporatePDF({ document }: PDFTemplateProps) {
                             {items.map((item, index) => {
                                 const lineTotal = item.quantity * item.unitPrice;
                                 return (
-                                    <View key={index} style={{ flexDirection: "row", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+                                    <View key={index} wrap={false} style={{ flexDirection: "row", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
                                         <View style={[baseStyles.colDesc, { flexDirection: "row", alignItems: "center" }]}>
                                             <Text style={{ fontSize: 10, color: colors.gray800 }}>{item.description}</Text>
                                             {item.discountPercent > 0 && <Text style={{ marginLeft: 6, fontSize: 9, color: colors.gray400 }}>{item.discountPercent}% off</Text>}
@@ -656,17 +696,22 @@ export function CorporatePDF({ document }: PDFTemplateProps) {
                         {/* Notes & Terms */}
                         {notes && (
                             <View style={{ marginTop: 20 }}>
-                                <Text style={baseStyles.termsTitle}>Notes</Text>
                                 <Text style={baseStyles.termsText}>{notes}</Text>
                             </View>
                         )}
                         {terms && (
-                            <View style={baseStyles.terms}>
+                            <View style={baseStyles.terms} wrap={false}>
                                 <Text style={baseStyles.termsTitle}>Terms & Conditions</Text>
                                 <Text style={baseStyles.termsText}>{terms}</Text>
                             </View>
                         )}
                     </View>
+                </View>
+
+                {/* Footer with page numbers */}
+                <View style={[baseStyles.footer, { left: 140 }]} fixed>
+                    <Text style={baseStyles.footerText}>{business.name || "Your Business"}</Text>
+                    <Text style={baseStyles.footerText} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
                 </View>
             </Page>
         </Document>
@@ -738,7 +783,7 @@ export function CreativePDF({ document }: PDFTemplateProps) {
                     {items.map((item, index) => {
                         const lineTotal = item.quantity * item.unitPrice;
                         return (
-                            <View key={index} style={{ flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+                            <View key={index} wrap={false} style={{ flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
                                 <View style={[baseStyles.colDesc, { flexDirection: "row", alignItems: "center" }]}>
                                     <Text style={{ fontSize: 11, color: colors.gray800 }}>{item.description}</Text>
                                     {item.discountPercent > 0 && <Text style={{ marginLeft: 6, fontSize: 10, color: colors.gray400 }}>{item.discountPercent}% off</Text>}
@@ -780,16 +825,18 @@ export function CreativePDF({ document }: PDFTemplateProps) {
                 {/* Notes & Terms */}
                 {notes && (
                     <View style={{ marginTop: 20 }}>
-                        <Text style={baseStyles.termsTitle}>Notes</Text>
                         <Text style={baseStyles.termsText}>{notes}</Text>
                     </View>
                 )}
                 {terms && (
-                    <View style={baseStyles.terms}>
+                    <View style={baseStyles.terms} wrap={false}>
                         <Text style={baseStyles.termsTitle}>Terms & Conditions</Text>
                         <Text style={baseStyles.termsText}>{terms}</Text>
                     </View>
                 )}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -854,7 +901,7 @@ export function SimpleCleanPDF({ document }: PDFTemplateProps) {
                     {items.map((item, index) => {
                         const lineTotal = item.quantity * item.unitPrice;
                         return (
-                            <View key={index} style={{ flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+                            <View key={index} wrap={false} style={{ flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
                                 <View style={[baseStyles.colDesc, { flexDirection: "row", alignItems: "center" }]}>
                                     <Text style={{ fontSize: 11, color: colors.gray800 }}>{item.description}</Text>
                                     {item.discountPercent > 0 && <Text style={{ marginLeft: 6, fontSize: 10, color: colors.gray400 }}>{item.discountPercent}% off</Text>}
@@ -894,16 +941,18 @@ export function SimpleCleanPDF({ document }: PDFTemplateProps) {
                 {/* Notes & Terms */}
                 {notes && (
                     <View style={{ marginTop: 20 }}>
-                        <Text style={baseStyles.termsTitle}>Notes</Text>
                         <Text style={baseStyles.termsText}>{notes}</Text>
                     </View>
                 )}
                 {terms && (
-                    <View style={baseStyles.terms}>
+                    <View style={baseStyles.terms} wrap={false}>
                         <Text style={baseStyles.termsTitle}>Terms & Conditions</Text>
                         <Text style={baseStyles.termsText}>{terms}</Text>
                     </View>
                 )}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -977,6 +1026,9 @@ export function SignaturePDF({ document }: PDFTemplateProps) {
                         <Text style={{ fontSize: 10, color: colors.gray400, textTransform: "uppercase", letterSpacing: 1 }}>Authorized Signature</Text>
                     </View>
                 </View>
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -1037,7 +1089,10 @@ export function TotalHighlightPDF({ document }: PDFTemplateProps) {
                     {totalDiscount > 0 && <View style={baseStyles.totalRow}><Text style={baseStyles.totalLabel}>Discount</Text><Text style={[baseStyles.totalValue, { color: colors.green600 }]}>-{formatCurrency(totalDiscount, currency)}</Text></View>}
                     {totalTax > 0 && <View style={baseStyles.totalRow}><Text style={baseStyles.totalLabel}>{taxRateDisplay ? `VAT (${taxRateDisplay}%)` : "Tax"}</Text><Text style={baseStyles.totalValue}>{formatCurrency(totalTax, currency)}</Text></View>}
                 </View>
-                {terms && <View style={baseStyles.terms}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View>}
+                {terms && <View style={baseStyles.terms} wrap={false}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View>}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -1085,7 +1140,7 @@ export function BlueBannerPDF({ document }: PDFTemplateProps) {
                         <Text style={[baseStyles.colAmount, { fontSize: 11, fontWeight: 600, color: colors.gray600, textTransform: "uppercase" }]}>Amount</Text>
                     </View>
                     {items.map((item, index) => (
-                        <View key={index} style={{ flexDirection: "row", paddingVertical: 14, backgroundColor: index % 2 === 1 ? colors.gray50 : "transparent" }}>
+                        <View key={index} wrap={false} style={{ flexDirection: "row", paddingVertical: 14, backgroundColor: index % 2 === 1 ? colors.gray50 : "transparent" }}>
                             <Text style={[baseStyles.colDesc, { fontSize: 13, color: colors.gray700 }]}>{item.description}</Text>
                             <Text style={[baseStyles.colQty, { fontSize: 13, color: colors.gray500 }]}>{item.quantity}</Text>
                             <Text style={[baseStyles.colRate, { fontSize: 13, color: colors.gray500 }]}>{formatCurrency(item.unitPrice, currency)}</Text>
@@ -1108,7 +1163,10 @@ export function BlueBannerPDF({ document }: PDFTemplateProps) {
                     </View>
                 </View>
                 <View style={{ alignItems: "center", paddingVertical: 24, borderTopWidth: 1, borderTopColor: colors.gray200 }}><Text style={{ fontSize: 16, fontWeight: 500, color: color }}>Thank you for your business!</Text></View>
-                {terms && <View style={baseStyles.terms}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View>}
+                {terms && <View style={baseStyles.terms} wrap={false}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View>}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -1167,7 +1225,7 @@ export function WatercolorPDF({ document }: PDFTemplateProps) {
                         <Text style={[baseStyles.colAmount, { fontSize: 10, fontWeight: 600, color: color, textTransform: "uppercase", letterSpacing: 1 }]}>Total</Text>
                     </View>
                     {items.map((item, index) => (
-                        <View key={index} style={{ flexDirection: "row", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+                        <View key={index} wrap={false} style={{ flexDirection: "row", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
                             <Text style={[baseStyles.colDesc, { fontSize: 13, color: colors.gray700 }]}>{item.description}</Text>
                             <Text style={[baseStyles.colQty, { fontSize: 13, color: colors.gray500 }]}>{item.quantity}</Text>
                             <Text style={[baseStyles.colRate, { fontSize: 13, color: colors.gray500 }]}>{formatCurrency(item.unitPrice, currency)}</Text>
@@ -1189,7 +1247,10 @@ export function WatercolorPDF({ document }: PDFTemplateProps) {
                         </View>
                     </View>
                 </View>
-                {terms && <View style={baseStyles.terms}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View>}
+                {terms && <View style={baseStyles.terms} wrap={false}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View>}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -1275,6 +1336,12 @@ export function SidebarPDF({ document }: PDFTemplateProps) {
                             </View>
                         )}
                     </View>
+                </View>
+
+                {/* Footer with page numbers */}
+                <View style={[baseStyles.footer, { left: 140 }]} fixed>
+                    <Text style={baseStyles.footerText}>{business.name || "Your Business"}</Text>
+                    <Text style={baseStyles.footerText} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
                 </View>
             </Page>
         </Document>
@@ -1363,6 +1430,9 @@ export function BlueAccentPDF({ document }: PDFTemplateProps) {
                         {terms && <Text style={{ fontSize: 10, color: colors.gray400, lineHeight: 1.6 }}>{terms}</Text>}
                     </View>
                 )}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -1444,6 +1514,12 @@ export function TwoColumnPDF({ document }: PDFTemplateProps) {
                         </View>
                     )}
                 </View>
+
+                {/* Footer with page numbers */}
+                <View style={[baseStyles.footer, { left: 0, right: 0, paddingHorizontal: 32 }]} fixed>
+                    <Text style={baseStyles.footerText}>{business.name || "Your Business"}</Text>
+                    <Text style={baseStyles.footerText} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+                </View>
             </Page>
         </Document>
     );
@@ -1523,6 +1599,9 @@ export function LowercaseMinimalPDF({ document }: PDFTemplateProps) {
                         {terms && <Text style={{ fontSize: 10, color: colors.gray400, lineHeight: 1.6 }}>{terms}</Text>}
                     </View>
                 )}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -1578,7 +1657,7 @@ export function BeachWavePDF({ document }: PDFTemplateProps) {
                     {items.map((item, index) => {
                         const lineTotal = item.quantity * item.unitPrice;
                         return (
-                            <View key={index} style={{ flexDirection: "row", paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+                            <View key={index} wrap={false} style={{ flexDirection: "row", paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
                                 <Text style={[baseStyles.colDesc, { fontSize: 13, color: colors.gray700 }]}>{item.description || "Item"}</Text>
                                 <Text style={[baseStyles.colQty, { fontSize: 13, color: colors.gray500, textAlign: "center" }]}>{item.quantity}</Text>
                                 <Text style={[baseStyles.colRate, { fontSize: 13, color: colors.gray500, textAlign: "right" }]}>{formatCurrency(item.unitPrice, currency)}</Text>
@@ -1617,6 +1696,12 @@ export function BeachWavePDF({ document }: PDFTemplateProps) {
                 {/* Notes & Terms */}
                 {notes && <Text style={{ fontSize: 12, color: colors.gray600, lineHeight: 1.7, marginBottom: 12 }}>{notes}</Text>}
                 {terms && <Text style={{ fontSize: 10, color: colors.gray400, lineHeight: 1.6 }}>{terms}</Text>}
+
+                {/* Footer with page numbers - positioned above the wave */}
+                <View style={[baseStyles.footer, { bottom: 65 }]} fixed>
+                    <Text style={baseStyles.footerText}>{business.name || "Your Business"}</Text>
+                    <Text style={baseStyles.footerText} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+                </View>
 
                 {/* Beach Wave SVG decoration */}
                 <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60 }}>
@@ -1693,7 +1778,10 @@ export function BlueHeaderBarPDF({ document }: PDFTemplateProps) {
                         <Text style={{ fontSize: 16, fontWeight: 700, color: color, width: 80, textAlign: "right" }}>{formatCurrency(grandTotal, currency)}</Text>
                     </View>
                 </View>
-                {terms ? <View style={baseStyles.terms}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View> : null}
+                {terms ? <View style={baseStyles.terms} wrap={false}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View> : null}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
@@ -1775,7 +1863,10 @@ export function CircularModernPDF({ document }: PDFTemplateProps) {
                     </View>
                 </View>
 
-                {terms ? <View style={baseStyles.terms}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View> : null}
+                {terms ? <View style={baseStyles.terms} wrap={false}><Text style={baseStyles.termsTitle}>Terms & Conditions</Text><Text style={baseStyles.termsText}>{terms}</Text></View> : null}
+
+                {/* Footer with page numbers */}
+                <PDFFooter businessName={business.name || "Your Business"} />
             </Page>
         </Document>
     );
