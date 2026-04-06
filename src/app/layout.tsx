@@ -10,7 +10,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Invoice Generator - Create Professional Invoices & Quotations Free",
   description:
-    "Free online invoice and quotation generator. Create professional invoices, download as PDF, PNG, or HTML. No signup required, no data stored.",
+    "Free online invoice and quotation generator. Create professional invoices, download as PDF. No signup required, no data stored.",
   keywords: [
     "invoice generator",
     "quotation generator",

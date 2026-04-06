@@ -6,52 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import {
     FileText,
-    Image as ImageIcon,
-    Code,
     ArrowLeft,
     Loader2,
     RefreshCw
 } from "lucide-react";
 import { useExport } from "@/hooks/useExport";
-import { cn } from "@/lib/utils";
 import { DocumentPreview } from "@/components/preview/DocumentPreview";
 
 export function PreviewStep() {
     const { state, returnFromPreview, resetDocument } = useDocument();
     const { document } = state;
-    const { exportToPDF, exportToPNG, exportToHTML, isExporting, exportType } = useExport();
+    const { exportToPDF, isExporting, exportType } = useExport();
 
     const [zoom, setZoom] = useState(100);
-
-    const exportOptions = [
-        {
-            id: "pdf",
-            label: "PDF Document",
-            description: "Professional PDF file for sharing",
-            icon: FileText,
-            action: exportToPDF,
-            color: "text-red-500",
-            bgColor: "bg-red-50",
-        },
-        {
-            id: "png",
-            label: "PNG Image",
-            description: "High-resolution image for quick sharing",
-            icon: ImageIcon,
-            action: exportToPNG,
-            color: "text-blue-500",
-            bgColor: "bg-blue-50",
-        },
-        {
-            id: "html",
-            label: "HTML File",
-            description: "Open in browser, print as PDF",
-            icon: Code,
-            action: exportToHTML,
-            color: "text-green-500",
-            bgColor: "bg-green-50",
-        },
-    ];
 
     return (
         <div className="space-y-6">
@@ -116,38 +83,25 @@ export function PreviewStep() {
             {/* Export Options */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Export Options</CardTitle>
+                    <CardTitle className="text-lg">Download</CardTitle>
                     <CardDescription>
-                        Choose your preferred format to download
+                        Export your document as a professional PDF
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-4 sm:grid-cols-3">
-                        {exportOptions.map((option) => (
-                            <button
-                                key={option.id}
-                                onClick={option.action}
-                                disabled={isExporting}
-                                className={cn(
-                                    "flex flex-col items-center rounded-xl border-2 border-slate-200 p-6 transition-all",
-                                    "hover:border-slate-300 hover:bg-slate-50",
-                                    "disabled:cursor-not-allowed disabled:opacity-50"
-                                )}
-                            >
-                                <div className={cn("mb-3 rounded-full p-3", option.bgColor)}>
-                                    {isExporting && exportType === option.id ? (
-                                        <Loader2 className={cn("h-6 w-6 animate-spin", option.color)} />
-                                    ) : (
-                                        <option.icon className={cn("h-6 w-6", option.color)} />
-                                    )}
-                                </div>
-                                <span className="font-medium text-slate-900">{option.label}</span>
-                                <span className="mt-1 text-center text-xs text-slate-500">
-                                    {option.description}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
+                    <Button
+                        onClick={exportToPDF}
+                        disabled={isExporting}
+                        className="w-full gap-2 bg-red-600 hover:bg-red-700"
+                        size="lg"
+                    >
+                        {isExporting && exportType === "pdf" ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                            <FileText className="h-5 w-5" />
+                        )}
+                        Download PDF
+                    </Button>
                 </CardContent>
             </Card>
 
