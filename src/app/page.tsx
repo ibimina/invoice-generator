@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 async function fetchStats() {
   try {
@@ -50,19 +51,20 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600">
               <FileText className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-slate-900">InvoiceGen</span>
+            <span className="text-xl font-bold text-foreground">InvoiceGen</span>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link href="/create?type=quotation" className="hidden sm:block">
-              <Button variant="ghost" className="text-slate-600">
+              <Button variant="ghost" className="text-muted-foreground">
                 Create Quotation
               </Button>
             </Link>
@@ -82,36 +84,36 @@ export default function HomePage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:gap-16">
             <div className="flex-1 text-center lg:text-left">
               {(stats.downloads > 0 || stats.visits > 0) && (
-                <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm">
+                <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-border bg-muted px-4 py-2 text-sm">
                   {stats.downloads > 0 && (
-                    <span className="flex items-center gap-2 text-slate-700">
+                    <span className="flex items-center gap-2 text-foreground">
                       <Download className="h-4 w-4 text-teal-600" />
                       <strong>{stats.downloads.toLocaleString()}</strong> downloads
                     </span>
                   )}
                   {stats.downloads > 0 && stats.visits > 0 && (
-                    <span className="h-4 w-px bg-slate-300" />
+                    <span className="h-4 w-px bg-border" />
                   )}
                   {stats.visits > 0 && (
-                    <span className="flex items-center gap-2 text-slate-700">
-                      <Eye className="h-4 w-4 text-slate-400" />
+                    <span className="flex items-center gap-2 text-foreground">
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                       <strong>{stats.visits.toLocaleString()}</strong> visits
                     </span>
                   )}
                 </div>
               )}
 
-              <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 Professional invoices
                 <span className="block text-teal-600">in seconds</span>
               </h1>
 
-              <p className="mt-6 text-lg text-slate-600 lg:text-xl">
+              <p className="mt-6 text-lg text-muted-foreground lg:text-xl">
                 Stop wasting time on manual invoicing. Create beautiful, professional
                 invoices and quotations instantly — no signup, no fees, completely free.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500 lg:justify-start">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground lg:justify-start">
                 <span className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-teal-600" />
                   100% Free
@@ -143,54 +145,54 @@ export default function HomePage() {
 
             <div className="mt-12 flex-1 lg:mt-0">
               <div className="relative mx-auto max-w-md">
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+                <div className="rounded-2xl border border-border bg-card p-6 shadow-xl">
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <div className="h-8 w-8 rounded bg-teal-600 mb-2" />
-                      <div className="h-2 w-24 rounded bg-slate-200" />
+                      <div className="h-2 w-24 rounded bg-muted" />
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-teal-600 mb-1">INVOICE</div>
-                      <div className="h-2 w-16 rounded bg-slate-200 ml-auto" />
+                      <div className="h-2 w-16 rounded bg-muted ml-auto" />
                     </div>
                   </div>
 
                   <div className="h-1 w-full bg-teal-600 rounded mb-4" />
 
                   <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="rounded-lg border border-slate-100 p-3">
-                      <div className="text-xs text-slate-400 mb-1">Bill To</div>
-                      <div className="h-2 w-20 rounded bg-slate-200 mb-1" />
-                      <div className="h-2 w-16 rounded bg-slate-100" />
+                    <div className="rounded-lg border border-border p-3">
+                      <div className="text-xs text-muted-foreground mb-1">Bill To</div>
+                      <div className="h-2 w-20 rounded bg-muted mb-1" />
+                      <div className="h-2 w-16 rounded bg-muted/50" />
                     </div>
-                    <div className="rounded-lg border border-slate-100 p-3">
-                      <div className="text-xs text-slate-400 mb-1">Date</div>
-                      <div className="h-2 w-16 rounded bg-slate-200 mb-1" />
-                      <div className="h-2 w-12 rounded bg-slate-100" />
+                    <div className="rounded-lg border border-border p-3">
+                      <div className="text-xs text-muted-foreground mb-1">Date</div>
+                      <div className="h-2 w-16 rounded bg-muted mb-1" />
+                      <div className="h-2 w-12 rounded bg-muted/50" />
                     </div>
                   </div>
 
                   <div className="space-y-2 mb-4">
-                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                      <div className="h-2 w-32 rounded bg-slate-200" />
-                      <div className="h-2 w-16 rounded bg-slate-200" />
+                    <div className="flex justify-between items-center py-2 border-b border-border">
+                      <div className="h-2 w-32 rounded bg-muted" />
+                      <div className="h-2 w-16 rounded bg-muted" />
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                      <div className="h-2 w-28 rounded bg-slate-200" />
-                      <div className="h-2 w-14 rounded bg-slate-200" />
+                    <div className="flex justify-between items-center py-2 border-b border-border">
+                      <div className="h-2 w-28 rounded bg-muted" />
+                      <div className="h-2 w-14 rounded bg-muted" />
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center pt-2 border-t-2 border-teal-600">
-                    <span className="font-semibold text-slate-700">Total</span>
+                    <span className="font-semibold text-foreground">Total</span>
                     <span className="text-xl font-bold text-teal-600">$1,250.00</span>
                   </div>
                 </div>
 
-                <div className="absolute -top-4 -right-4 rounded-full bg-teal-100 p-3">
+                <div className="absolute -top-4 -right-4 rounded-full bg-teal-100 dark:bg-teal-900 p-3">
                   <Sparkles className="h-6 w-6 text-teal-600" />
                 </div>
-                <div className="absolute -bottom-4 -left-4 rounded-xl bg-slate-900 px-4 py-2 text-white text-sm font-medium shadow-lg">
+                <div className="absolute -bottom-4 -left-4 rounded-xl bg-slate-900 dark:bg-slate-100 px-4 py-2 text-white dark:text-slate-900 text-sm font-medium shadow-lg">
                   PDF Ready ✓
                 </div>
               </div>
@@ -200,13 +202,13 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-slate-50">
+      <section className="py-20 bg-muted">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+            <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
               Everything you need, nothing you don&apos;t
             </h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <p className="mt-4 text-lg text-muted-foreground">
               Built for freelancers, small businesses, and anyone who values their time.
             </p>
           </div>
@@ -217,48 +219,48 @@ export default function HomePage() {
                 icon: Zap,
                 title: "Instant Generation",
                 description: "Create professional invoices in under 60 seconds. No learning curve, no complexity.",
-                color: "bg-amber-100 text-amber-600",
+                color: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
               },
               {
                 icon: Shield,
                 title: "100% Private",
                 description: "Your data never leaves your browser. We don't store anything — zero tracking, zero risk.",
-                color: "bg-emerald-100 text-emerald-600",
+                color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
               },
               {
                 icon: Globe,
                 title: "Multi-Currency",
                 description: "Support for USD, EUR, GBP, and 10+ other currencies with proper formatting.",
-                color: "bg-blue-100 text-blue-600",
+                color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
               },
               {
                 icon: CreditCard,
                 title: "Completely Free",
                 description: "No hidden fees, no premium tiers, no surprise charges. Free forever.",
-                color: "bg-purple-100 text-purple-600",
+                color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
               },
               {
                 icon: Clock,
                 title: "Save Hours Weekly",
                 description: "Stop wrestling with spreadsheets. Create, preview, and download in one flow.",
-                color: "bg-rose-100 text-rose-600",
+                color: "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400",
               },
               {
                 icon: Users,
                 title: "No Account Needed",
                 description: "Jump straight in. No signup forms, no email verification, no passwords.",
-                color: "bg-teal-100 text-teal-600",
+                color: "bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400",
               },
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-2xl border border-slate-200 bg-white p-6 transition-shadow hover:shadow-lg"
+                className="rounded-2xl border border-border bg-card p-6 transition-shadow hover:shadow-lg"
               >
                 <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl ${feature.color}`}>
                   <feature.icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">{feature.title}</h3>
-                <p className="mt-2 text-slate-600">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-foreground">{feature.title}</h3>
+                <p className="mt-2 text-muted-foreground">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -269,14 +271,14 @@ export default function HomePage() {
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700 mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-teal-50 dark:bg-teal-900/30 px-4 py-2 text-sm font-medium text-teal-700 dark:text-teal-400 mb-4">
               <Sparkles className="h-4 w-4" />
               17 Professional Templates
             </div>
-            <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+            <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
               Find your perfect style
             </h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <p className="mt-4 text-lg text-muted-foreground">
               From minimal to bold, we&apos;ve got a template that matches your brand.
             </p>
           </div>
@@ -285,7 +287,7 @@ export default function HomePage() {
             {templates.map((template) => (
               <span
                 key={template}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-teal-300 hover:bg-teal-50 transition-colors cursor-default"
+                className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:border-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-colors cursor-default"
               >
                 {template}
               </span>
@@ -293,12 +295,12 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center justify-center gap-4 mb-10">
-            <span className="text-sm text-slate-500">10 accent colors:</span>
+            <span className="text-sm text-muted-foreground">10 accent colors:</span>
             <div className="flex gap-2">
               {["#14b8a6", "#3b82f6", "#dc2626", "#64748b", "#a855f7", "#10b981", "#f97316", "#ec4899", "#6366f1", "#f59e0b"].map((color) => (
                 <div
                   key={color}
-                  className="h-6 w-6 rounded-full border-2 border-white shadow-sm"
+                  className="h-6 w-6 rounded-full border-2 border-card shadow-sm"
                   style={{ backgroundColor: color }}
                 />
               ))}
@@ -317,7 +319,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-slate-900">
+      <section className="py-20 bg-slate-900 dark:bg-slate-950">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-white sm:text-4xl">
@@ -360,10 +362,10 @@ export default function HomePage() {
       {/* Final CTA */}
       <section className="py-24">
         <div className="mx-auto max-w-4xl px-4 text-center">
-          <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
             Ready to create your first invoice?
           </h2>
-          <p className="mt-4 text-lg text-slate-600">
+          <p className="mt-4 text-lg text-muted-foreground">
             Join thousands of freelancers and businesses who save time with InvoiceGen.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -374,23 +376,23 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
-          <p className="mt-6 text-sm text-slate-500">
+          <p className="mt-6 text-sm text-muted-foreground">
             No signup • No credit card • Always free
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-8">
+      <footer className="border-t border-border py-8">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600">
                 <FileText className="h-4 w-4 text-white" />
               </div>
-              <span className="font-semibold text-slate-900">InvoiceGen</span>
+              <span className="font-semibold text-foreground">InvoiceGen</span>
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               Free and Open Source • MIT License • Your data stays private
             </p>
           </div>

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { FileText, Plus, Home } from "lucide-react";
 import { DocumentType } from "@/types/document";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 function CreatePageContent() {
     const searchParams = useSearchParams();
@@ -43,21 +44,21 @@ function CreatePageContent() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex min-h-screen flex-col bg-background">
             {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
+            <header className="sticky top-0 z-50 border-b border-border bg-card shadow-sm">
                 <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
                     <div className="flex items-center gap-4">
                         <Link href="/" className="flex items-center gap-2">
                             <FileText className="h-7 w-7 text-teal-600" />
-                            <span className="text-lg font-bold text-slate-900">
+                            <span className="text-lg font-bold text-foreground">
                                 Invoice Generator
                             </span>
                         </Link>
 
                         {/* Document Type Selector */}
                         <Select value={document.type} onValueChange={handleTypeChange}>
-                            <SelectTrigger className="w-[140px] border-slate-200">
+                            <SelectTrigger className="w-[140px] border-border">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -68,17 +69,18 @@ function CreatePageContent() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={handleNewDocument}
-                            className="gap-2 text-slate-600"
+                            className="gap-2 text-muted-foreground"
                         >
                             <Plus className="h-4 w-4" />
                             New
                         </Button>
                         <Link href="/">
-                            <Button variant="ghost" size="sm" className="gap-2 text-slate-600">
+                            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
                                 <Home className="h-4 w-4" />
                                 Home
                             </Button>
@@ -88,7 +90,7 @@ function CreatePageContent() {
             </header>
 
             {/* Progress Stepper */}
-            <div className="border-b border-slate-200 bg-white py-6">
+            <div className="border-b border-border bg-card py-6">
                 <div className="mx-auto max-w-3xl px-4">
                     <WizardStepper />
                 </div>
@@ -104,9 +106,9 @@ function CreatePageContent() {
             </main>
 
             {/* Footer */}
-            <footer className="border-t border-slate-200 bg-white py-4">
-                <div className="mx-auto max-w-5xl px-4 text-center text-sm text-slate-500">
-                    Your data is processed locally and never sent to any server.
+            <footer className="border-t border-border bg-card py-4">
+                <div className="mx-auto max-w-5xl px-4 text-center text-sm text-muted-foreground">
+                    🔒 100% private — nothing leaves your browser
                 </div>
             </footer>
         </div>
